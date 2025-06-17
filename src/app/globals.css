@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+:root {
+  height: 100%;
+  @apply bg-background;
+  /* scroll-behavior: smooth */
+}
+
+@layer utilities {
+  .button {
+    @apply bg-gorgonzolaBlue hover:bg-gorgonzolaBlue rounded-md  text-background p-3;
+  }
+
+  .white-blue-bg {
+    @apply rounded-2xl  shadow-lg border border-gray-100 w-full grid grid-cols-1 md:grid-cols-2  p-5 gap-10 lg:p-5 xl:p-20 md:bg-[linear-gradient(to_left,_#404bd0_40%,_#ffffff_0%)] bg-[linear-gradient(to_top,_#404bd0_40%,_#ffffff_0%)];
+  }
+
+  .white-blue-bg2 {
+    @apply rounded-2xl  shadow-lg border border-gray-100 w-full grid grid-cols-1 md:grid-cols-2  p-10 gap-10 lg:p-20 md:bg-[linear-gradient(to_left,_#404bd0_40%,_#ffffff_0%)] bg-white;
+  }
+  .rounded {
+    @apply p-2 text-sm lg:text-base  text-center px-5 rounded-full;
+  }
+  .container {
+    @apply mx-auto max-w-2xl  md:max-w-5xl md:px-10 lg:max-w-[1240px]  px-10 sm:px-5;
+  }
+
+  .heading {
+    @apply text-xl md:text-2xl lg:text-3xl font-bold text-left w-full;
+  }
+
+  .contact-us-input {
+    @apply py-6 placeholder:text-gray-400;
+  }
+  .flexCenter {
+    @apply flex items-center justify-center;
+  }
+
+  .flexBetween {
+    @apply flex items-center justify-between;
+  }
+
+  .flexStart {
+    @apply flex items-center justify-start;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 235 0% 100%;
+    --foreground: 235 0% 10%;
+    --card: 235 0% 100%;
+    --card-foreground: 235 0% 15%;
+    --popover: 235 0% 100%;
+    --popover-foreground: 235 95% 10%;
+    --primary: 235 60.5% 53.3%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 235 10% 90%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 197 10% 95%;
+    --muted-foreground: 235 0% 40%;
+    --accent: 197 10% 90%;
+    --accent-foreground: 235 0% 15%;
+    --destructive: 0 50% 50%;
+    --destructive-foreground: 235 0% 100%;
+    --border: 235 20% 82%;
+    --input: 235 20% 50%;
+    --ring: 235 60.5% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 235 10% 10%;
+    --foreground: 235 0% 90%;
+    --card: 235 0% 10%;
+    --card-foreground: 235 0% 90%;
+    --popover: 235 10% 5%;
+    --popover-foreground: 235 0% 90%;
+    --primary: 235 60.5% 53.3%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 235 10% 20%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 197 10% 25%;
+    --muted-foreground: 235 0% 60%;
+    --accent: 197 10% 25%;
+    --accent-foreground: 235 0% 90%;
+    --destructive: 0 50% 30%;
+    --destructive-foreground: 235 0% 90%;
+    --border: 235 20% 25%;
+    --input: 235 20% 25%;
+    --ring: 235 60.5% 53.3%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.pattern {
+  background: url("/design.png");
+  background-repeat: no-repeat;
+}
