@@ -305,7 +305,6 @@ export const useMentorService = () => {
 //   });
 // };
 export const useImmigrationService = () => {
-  console.log("useImmigrationService", apiUrl);
   const { data: session } = useSession();
   const router = useRouter();
   return useMutation({
@@ -328,7 +327,6 @@ export const useImmigrationService = () => {
       router.push(data.url);
     },
     onError: (error) => {
-      console.log(error);
       // @ts-ignore
       toast.error(error.response.data.message, {
         description: "Please try after few min",
