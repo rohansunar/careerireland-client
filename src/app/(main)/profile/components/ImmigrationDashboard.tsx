@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation";
 import { useImmApplication } from "@/hooks/use-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+
 import {
   Plus,
-  AlertTriangle,
-  Upload,
   Bell,
   CheckCircle,
   Clock,
@@ -112,17 +111,7 @@ const QuickActions: React.FC = () => {
           <Plus className="w-5 h-5" />
           Start New Application
         </Button>
-        <Button variant="outline" className="w-full justify-start gap-3 h-12" size="lg">
-          <AlertTriangle className="w-5 h-5 text-orange-500" />
-          View Flagged Items
-          <Badge variant="destructive" className="ml-auto">
-            3
-          </Badge>
-        </Button>
-        <Button variant="outline" className="w-full justify-start gap-3 h-12" size="lg">
-          <Upload className="w-5 h-5 text-green-500" />
-          Upload Documents
-        </Button>
+
       </div>
     </div>
   );
@@ -173,7 +162,7 @@ const ITEMS_PER_PAGE = 5;
 
 // Main dashboard component
 const ImmigrationDashboard: React.FC = () => {
-  const { data, isLoading, isError } = useImmApplication();
+  const { data } = useImmApplication();
   const sampleCases = data?.data || [];
 
   const inReviewCases = sampleCases.filter((c: { status: string }) => c.status === "In Review").length;

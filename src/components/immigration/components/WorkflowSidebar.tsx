@@ -295,7 +295,7 @@ const WorkflowSidebar: React.FC<WorkflowSidebarProps> = ({
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Specialist:</span>
-            <span className="font-medium">Sarah O'Connor</span>
+            <span className="font-medium">Sarah O&apos;Connor</span>
           </div>
         </CardContent>
       </Card>

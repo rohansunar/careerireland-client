@@ -2,18 +2,13 @@
 
 import React, { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  FileText, 
-  Users, 
-  Send, 
-  Clock, 
-  MessageSquare, 
-  CheckCircle,
-  ArrowLeft,
-  Save,
-  ArrowRight
+import {
+  FileText,
+  Users,
+  Send,
+  Clock,
+  MessageSquare,
+  CheckCircle
 } from "lucide-react";
 
 import { 
@@ -24,11 +19,10 @@ import {
   CaseWorkflowManagerProps
 } from "./types/workflow.types";
 
-import { 
-  mock12StepWorkflow, 
-  mockChecklistProgress, 
-  mockCaseFormData,
-  getStepsByPhase 
+import {
+  mock12StepWorkflow,
+  mockChecklistProgress,
+  mockCaseFormData
 } from "../../mockdata/workflow.mock";
 
 import WorkflowProgressIndicator from "./components/WorkflowProgressIndicator";
@@ -134,17 +128,17 @@ const CaseWorkflowManager: React.FC<CaseWorkflowManagerProps> = ({
 
   const handleSubmissionUpdate = (submissionData: any) => {
     // Handle submission updates for application phase
-    console.log('Submission update:', submissionData);
+    // TODO: Implement submission update logic
   };
 
   const handleQueryResponse = (queryId: string, response: any) => {
     // Handle query responses
-    console.log('Query response:', queryId, response);
+    // TODO: Implement query response logic
   };
 
   const handleAppealSubmit = (appealData: any) => {
     // Handle appeal submission
-    console.log('Appeal submitted:', appealData);
+    // TODO: Implement appeal submission logic
   };
 
   const handlePrevious = () => {

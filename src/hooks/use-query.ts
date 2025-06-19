@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import revalidateTag from "@/util/revalidate-tag";
 import { failed, success } from "@/util/tools";
-import { number } from "zod";
 
 // ..................Auth...................................
 
@@ -497,15 +496,23 @@ export const useSubmitApplicationStep = () => {
   const { data: session } = useSession();
 
   return useMutation({
-    mutationFn: async ({ applicationId, formData, currentStep }: SubmissionPayload) => {
-      const res = await axios.put(`${apiUrl}/applications/${applicationId}`, {
-        formData,
-        currentStep,
-      }, {
-        headers: {
-          Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+    mutationFn: async ({
+      applicationId,
+      formData,
+      currentStep,
+    }: SubmissionPayload) => {
+      const res = await axios.put(
+        `${apiUrl}/applications/${applicationId}`,
+        {
+          formData,
+          currentStep,
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+          },
+        }
+      );
       return res.data;
     },
   });
@@ -522,14 +529,19 @@ export const useSubmitApplicationDocument = () => {
   const { data: session } = useSession();
 
   return useMutation({
-    mutationFn: async ({ applicationId, documentName, file, stageOrder }: Submissiondoc) => {
+    mutationFn: async ({
+      applicationId,
+      documentName,
+      file,
+      stageOrder,
+    }: Submissiondoc) => {
       const formData = new FormData();
       formData.append("document_name", documentName);
-      formData.append("file", file); 
+      formData.append("file", file);
       formData.append("stage_order", stageOrder);
 
       const res = await axios.put(
-        `${apiUrl}/applications/${applicationId}/document`, 
+        `${apiUrl}/applications/${applicationId}/document`,
         formData,
         {
           headers: {

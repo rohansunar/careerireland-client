@@ -22,6 +22,7 @@ async function refreshToken(token: JWT): Promise<JWT> {
 }
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -75,6 +76,10 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   pages: {
     signIn: "/auth/login",
     error: "/auth/login",
@@ -95,13 +100,28 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user) return { ...token, ...user };
+
+      // Check if token has backendTokens before accessing
+      if (!token.backendTokens) return token;
+
       if (new Date().getTime() < token.backendTokens.expiresIn) return token;
-      return await refreshToken(token);
+
+      try {
+        return await refreshToken(token);
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+        // Return token without refresh if refresh fails
+        return token;
+      }
     },
 
     async session({ token, session }) {
-      session.user = token.user;
-      session.backendTokens = token.backendTokens;
+      if (token.user) {
+        session.user = token.user;
+      }
+      if (token.backendTokens) {
+        session.backendTokens = token.backendTokens;
+      }
       return session;
     },
   },

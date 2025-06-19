@@ -1,13 +1,11 @@
 // Mock data for 12-Step Immigration Workflow
-// Extends existing mock data with comprehensive workflow support
+// This file contains minimal mock data required for CaseWorkflowManager component
 
-import { 
-  ExtendedApplicationStep, 
-  WorkflowPhase, 
-  ChecklistProgress,
+import {
+  ExtendedApplicationStep,
   CaseFormData,
-  ChecklistItem
-} from '../components/immigration/types/workflow.types';
+  ChecklistProgress,
+} from "../components/immigration/types/workflow.types";
 
 // Mock 12-Step Workflow Data
 export const mock12StepWorkflow: ExtendedApplicationStep[] = [
@@ -21,471 +19,286 @@ export const mock12StepWorkflow: ExtendedApplicationStep[] = [
     stepType: "user_action",
     estimatedDuration: "15 minutes",
     completedDate: "2025-01-15T10:30:00Z",
-    details: {
-      formData: {
-        personalInfo: {
-          surname: "Doe",
-          forename: "John",
-          dateOfBirth: "15/03/1990",
-          gender: "Male",
-          countryOfBirth: "Nigeria",
-          currentLocation: "Lagos, Nigeria",
-          address: {
-            line1: "123 Main Street",
-            line2: "Victoria Island",
-          },
-          contactPhone: "+234 801 234 5678",
-          contactEmail: "john.doe@example.com"
-        }
-      }
-    }
+    details: {},
   },
   {
     id: 2,
     title: "Visa Details",
-    description: "Specify visa type, travel dates, and passport information",
+    description: "Specify visa type, purpose, and travel dates",
     phase: "creation",
     status: "completed",
     stepType: "user_action",
     estimatedDuration: "20 minutes",
     completedDate: "2025-01-15T11:00:00Z",
-    details: {
-      formData: {
-        visaDetails: {
-          countryOfNationality: "Nigeria",
-          reasonForTravel: "Employment",
-          visaType: "Long Stay (D)",
-          journeyType: "Single",
-          purposeOfTravel: "Critical Skills Work Permit",
-          passportType: "Ordinary Passport",
-          passportNumber: "A12345678",
-          issuingAuthority: "Nigeria Immigration Service",
-          dateOfIssue: "01/01/2020",
-          dateOfExpiry: "01/01/2030",
-          proposedDates: {
-            from: "01/03/2025",
-            to: "01/03/2027"
-          }
-        }
-      }
-    }
+    details: {},
   },
   {
     id: 3,
     title: "Additional Information",
-    description: "Provide additional details about your application",
+    description: "Provide additional details and declarations",
     phase: "creation",
-    status: "completed",
+    status: "in_progress",
     stepType: "user_action",
     estimatedDuration: "10 minutes",
-    completedDate: "2025-01-15T11:15:00Z",
-    details: {
-      formData: {
-        additionalInfo: {
-          previousApplications: false,
-          refusedVisa: false,
-          criminalConvictions: false,
-          medicalConditions: false,
-          additionalDetails: "First-time applicant for Irish visa"
-        }
-      }
-    }
+    details: {},
   },
   {
     id: 4,
     title: "Document Upload",
-    description: "Upload required documents and verify checklist completion",
+    description: "Upload required documents and certificates",
     phase: "creation",
-    status: "in_progress",
+    status: "pending",
     stepType: "user_action",
     estimatedDuration: "30 minutes",
-    details: {
-      formData: {
-        documents: [
-          {
-            id: "doc-001",
-            name: "passport-copy.pdf",
-            type: "Passport Copy",
-            size: 2048576,
-            uploadDate: "2025-01-15T12:00:00Z",
-            status: "verified"
-          },
-          {
-            id: "doc-002",
-            name: "job-offer-letter.pdf",
-            type: "Job Offer Letter",
-            size: 1024768,
-            uploadDate: "2025-01-15T12:05:00Z",
-            status: "verified"
-          }
-        ]
-      }
-    }
+    details: {},
   },
   {
     id: 5,
-    title: "Review and Submit",
-    description: "Review your application and submit for processing",
+    title: "Review & Submit",
+    description: "Review all information and submit application",
     phase: "creation",
     status: "pending",
     stepType: "user_action",
     estimatedDuration: "15 minutes",
-    details: {
-      formData: {
-        reviewData: {
-          completionPercentage: 85,
-          criticalItemsComplete: true,
-          recommendedItemsComplete: false,
-          readyForSubmission: false
-        }
-      }
-    }
+    details: {},
   },
 
   // Phase 2: Processing (Steps 6-8)
   {
     id: 6,
-    title: "Onboarding",
-    description: "Client orientation and case assignment to specialist",
+    title: "Professional Onboarding",
+    description: "Initial consultation with immigration specialist",
     phase: "processing",
     status: "pending",
     stepType: "professional_action",
-    estimatedDuration: "1-2 business days",
-    assignedTo: "Immigration Specialist Team",
+    estimatedDuration: "2-3 business days",
     details: {
       onboardingInfo: {
         assignedSpecialist: "Sarah O'Connor",
-        onboardingDate: "2025-01-16T09:00:00Z",
+        onboardingDate: "2025-01-20T09:00:00Z",
         completionStatus: "pending",
         documentsProvided: [],
         nextSteps: [
-          "Assign case to specialist",
-          "Initial document review",
-          "Schedule checkpoint call"
-        ]
-      }
-    }
+          "Schedule initial consultation",
+          "Review application documents",
+        ],
+      },
+    },
   },
   {
     id: 7,
     title: "Checkpoint Call",
-    description: "Professional consultation and guidance session",
+    description: "Video consultation with specialist",
     phase: "processing",
     status: "pending",
     stepType: "professional_action",
     estimatedDuration: "45 minutes",
-    scheduledDate: "2025-01-17T14:00:00Z",
-    assignedTo: "Sarah O'Connor",
-    dependencies: [6],
     details: {
       checkpointCall: {
         callType: "Video Consultation",
         duration: "45 minutes",
         specialist: "Sarah O'Connor",
         status: "scheduled",
-        scheduledDate: "2025-01-17T14:00:00Z",
+        scheduledDate: "2025-01-22T14:00:00Z",
         agenda: [
-          "Review application details",
+          "Review application completeness",
           "Discuss document requirements",
           "Address any questions or concerns",
-          "Outline next steps"
         ],
-        meetingLink: "https://meet.example.com/checkpoint-call-123"
-      }
-    }
+        meetingLink: "https://meet.careerireland.com/room/abc123",
+      },
+    },
   },
   {
     id: 8,
     title: "Document Review",
-    description: "Expert document validation and feedback",
+    description: "Professional review of all submitted documents",
     phase: "processing",
     status: "pending",
     stepType: "professional_action",
-    estimatedDuration: "2-3 business days",
-    assignedTo: "Document Review Team",
-    dependencies: [7],
+    estimatedDuration: "3-5 business days",
     details: {
       documentReview: {
-        reviewedBy: "Document Review Team",
-        reviewDate: "2025-01-18T10:00:00Z",
+        reviewedBy: "Sarah O'Connor",
+        reviewDate: "2025-01-25T10:00:00Z",
         status: "under_review",
         feedback: [],
         approvedDocuments: [],
         rejectedDocuments: [],
-        missingDocuments: []
-      }
-    }
+        missingDocuments: [],
+      },
+    },
   },
 
-  // Phase 3: Application (Steps 9-11)
+  // Phase 3: Application (Steps 9-10)
   {
     id: 9,
     title: "Application Filing",
-    description: "Official submission preparation and filing",
+    description: "Official filing of application with authorities",
     phase: "application",
     status: "pending",
     stepType: "professional_action",
     estimatedDuration: "1-2 business days",
-    assignedTo: "Filing Team",
-    dependencies: [8],
     details: {
       filingInfo: {
-        filedBy: "Filing Team",
-        filingDate: "2025-01-20T09:00:00Z",
-        referenceNumber: "IRE-2025-001234",
-        status: "preparing"
-      }
-    }
+        filedBy: "Career Ireland Team",
+        filingDate: "2025-01-30T09:00:00Z",
+        referenceNumber: "CI-2025-001234",
+        status: "preparing",
+      },
+    },
   },
   {
     id: 10,
-    title: "Application Review",
-    description: "Internal processing and validation before submission",
+    title: "Submission Confirmation",
+    description: "Confirmation of successful submission",
     phase: "application",
     status: "pending",
     stepType: "system_action",
-    estimatedDuration: "1 business day",
-    dependencies: [9],
-    details: {}
-  },
-  {
-    id: 11,
-    title: "Application Submission",
-    description: "Final submission to DETE (Department of Enterprise, Trade and Employment)",
-    phase: "application",
-    status: "pending",
-    stepType: "external_action",
-    estimatedDuration: "1 business day",
-    dependencies: [10],
+    estimatedDuration: "Same day",
     details: {
       submissionInfo: {
-        submittedBy: "System",
-        submissionDate: "2025-01-22T09:00:00Z",
-        confirmationNumber: "DETE-2025-567890",
-        status: "submitted"
-      }
-    }
+        submittedBy: "Career Ireland System",
+        submissionDate: "2025-01-30T15:00:00Z",
+        confirmationNumber: "CONF-2025-001234",
+        status: "submitted",
+      },
+    },
   },
 
-  // Phase 4: Timeline (Step 12)
+  // Phase 4: Timeline (Step 11)
   {
-    id: 12,
-    title: "Timeline to Expect Outcome",
-    description: "Processing timeline and status tracking",
+    id: 11,
+    title: "Processing Timeline",
+    description: "Track application processing progress",
     phase: "timeline",
     status: "pending",
     stepType: "system_action",
     estimatedDuration: "8-12 weeks",
-    dependencies: [11],
     details: {
       timelineInfo: {
         estimatedProcessingTime: "8-12 weeks",
         currentPhase: "Initial Review",
         milestones: [
           {
-            id: "milestone-001",
+            id: "m1",
             title: "Application Received",
-            description: "DETE has received your application",
-            expectedDate: "2025-01-22",
-            completed: false
+            description: "Application received by DETE",
+            expectedDate: "2025-01-30",
+            completed: false,
           },
           {
-            id: "milestone-002",
-            title: "Initial Review Complete",
-            description: "Initial document review completed",
-            expectedDate: "2025-02-05",
-            completed: false
+            id: "m2",
+            title: "Initial Review",
+            description: "Initial completeness check",
+            expectedDate: "2025-02-06",
+            completed: false,
           },
           {
-            id: "milestone-003",
+            id: "m3",
+            title: "Detailed Assessment",
+            description: "Detailed review of application",
+            expectedDate: "2025-02-20",
+            completed: false,
+          },
+          {
+            id: "m4",
             title: "Decision Made",
             description: "Final decision on application",
-            expectedDate: "2025-04-15",
-            completed: false
-          }
+            expectedDate: "2025-03-15",
+            completed: false,
+          },
         ],
-        expectedDecisionDate: "2025-04-15",
-        lastUpdated: "2025-01-15T12:00:00Z"
-      }
-    }
+        expectedDecisionDate: "2025-03-15",
+        lastUpdated: "2025-01-15T10:30:00Z",
+      },
+    },
   },
 
-  // Phase 5: Queries (Steps 13-14) - Conditional
+  // Phase 5: Queries (Step 12)
+  {
+    id: 12,
+    title: "Query Management",
+    description: "Handle any additional information requests",
+    phase: "queries",
+    status: "pending",
+    stepType: "external_action",
+    estimatedDuration: "As needed",
+    details: {
+      queries: [],
+      responses: [],
+    },
+  },
+
+  // Phase 6: Decision (Steps 13-15)
   {
     id: 13,
-    title: "Queries from DETE",
-    description: "Handle additional information requests from authorities",
-    phase: "queries",
-    status: "not_applicable",
-    stepType: "external_action",
-    isConditional: true,
-    estimatedDuration: "Variable",
-    details: {
-      queries: []
-    }
-  },
-  {
-    id: 14,
-    title: "Queries Answered",
-    description: "Response submission and tracking",
-    phase: "queries",
-    status: "not_applicable",
-    stepType: "user_action",
-    isConditional: true,
-    estimatedDuration: "Variable",
-    dependencies: [13],
-    details: {
-      responses: []
-    }
-  },
-
-  // Phase 6: Decision (Steps 15-17)
-  {
-    id: 15,
-    title: "Work Permits Decision",
-    description: "Final decision notification (Approved or Rejected)",
+    title: "Decision Notification",
+    description: "Receive official decision on application",
     phase: "decision",
     status: "pending",
     stepType: "external_action",
     estimatedDuration: "1-2 business days",
-    dependencies: [12],
-    details: {}
+    details: {
+      decision: {
+        decisionType: "approved",
+        decisionDate: "2025-03-15T10:00:00Z",
+        decisionBy: "DETE Immigration Officer",
+        appealEligible: true,
+        appealDeadline: "2025-04-15",
+        permitDetails: {
+          permitNumber: "IRP-2025-001234",
+          validFrom: "2025-06-01",
+          validTo: "2026-06-01",
+          conditions: ["Must register with local authorities within 30 days"],
+        },
+      },
+    },
   },
-  {
-    id: 16,
-    title: "Appeal",
-    description: "Appeal process initiation (if rejected)",
-    phase: "decision",
-    status: "not_applicable",
-    stepType: "user_action",
-    isConditional: true,
-    estimatedDuration: "4-6 weeks",
-    dependencies: [15],
-    details: {}
-  },
-  {
-    id: 17,
-    title: "Appeal Decision",
-    description: "Final appeal outcome",
-    phase: "decision",
-    status: "not_applicable",
-    stepType: "external_action",
-    isConditional: true,
-    estimatedDuration: "8-12 weeks",
-    dependencies: [16],
-    details: {}
-  }
 ];
 
-// Mock Checklist Progress Data
+// Mock Checklist Progress
 export const mockChecklistProgress: ChecklistProgress = {
   critical: [
     {
-      id: "critical-001",
+      id: "c1",
       title: "Valid Passport",
-      description: "Passport valid for at least 6 months beyond intended stay",
+      description: "Passport valid for at least 6 months",
       priority: "CRITICAL",
       status: "completed",
-      documentType: "Identity Document",
+      documentType: "passport",
       required: true,
       conditional: false,
-      riskOfOmission: "Automatic rejection",
-      specifications: {
-        acceptedFormats: ["PDF", "JPG", "PNG"],
-        maxSize: "5MB",
-        validityRequirement: "6 months beyond stay",
-        notes: "Must have at least 2 blank pages"
-      }
+      riskOfOmission: "Application will be rejected",
     },
     {
-      id: "critical-002",
-      title: "Job Offer Letter",
-      description: "Official job offer from Irish employer",
-      priority: "CRITICAL",
-      status: "completed",
-      documentType: "Employment Document",
-      required: true,
-      conditional: false,
-      riskOfOmission: "Automatic rejection",
-      specifications: {
-        acceptedFormats: ["PDF"],
-        maxSize: "2MB",
-        notes: "Must include salary, start date, and job description"
-      }
-    },
-    {
-      id: "critical-003",
-      title: "Financial Evidence",
-      description: "Proof of sufficient funds for stay",
+      id: "c2",
+      title: "Passport Photos",
+      description: "Recent passport-sized photographs",
       priority: "CRITICAL",
       status: "pending",
-      documentType: "Financial Document",
+      documentType: "photo",
       required: true,
       conditional: false,
-      riskOfOmission: "Automatic rejection",
-      specifications: {
-        acceptedFormats: ["PDF"],
-        maxSize: "5MB",
-        minimumAmount: 3000,
-        notes: "Bank statements for last 6 months"
-      }
-    }
+      riskOfOmission: "Application will be rejected",
+    },
   ],
   recommended: [
     {
-      id: "recommended-001",
-      title: "Employment References",
-      description: "References from previous employers",
+      id: "r1",
+      title: "Bank Statements",
+      description: "3 months of bank statements",
       priority: "RECOMMENDED",
       status: "pending",
-      documentType: "Employment Document",
-      required: false,
-      conditional: false,
-      riskOfOmission: "May delay processing or affect approval chances",
-      specifications: {
-        acceptedFormats: ["PDF"],
-        maxSize: "2MB",
-        notes: "Letters from previous employers"
-      }
-    }
-  ],
-  optional: [
-    {
-      id: "optional-001",
-      title: "Travel Insurance",
-      description: "Comprehensive travel insurance coverage",
-      priority: "OPTIONAL",
-      status: "not_applicable",
-      documentType: "Insurance Document",
+      documentType: "financial",
       required: false,
       conditional: true,
-      riskOfOmission: "No impact on application",
-      specifications: {
-        acceptedFormats: ["PDF"],
-        maxSize: "2MB",
-        notes: "Recommended for short-stay visas"
-      }
-    }
+      riskOfOmission: "May delay processing",
+    },
   ],
-  enhancement: [
-    {
-      id: "enhancement-001",
-      title: "Property Documents",
-      description: "Evidence of property ownership in home country",
-      priority: "ENHANCEMENT",
-      status: "not_applicable",
-      documentType: "Property Document",
-      required: false,
-      conditional: false,
-      riskOfOmission: "No impact on application",
-      specifications: {
-        acceptedFormats: ["PDF"],
-        maxSize: "5MB",
-        notes: "Strengthens ties to home country"
-      }
-    }
-  ],
-  completionPercentage: 67
+  optional: [],
+  enhancement: [],
+  completionPercentage: 25,
 };
 
 // Mock Case Form Data
@@ -502,87 +315,36 @@ export const mockCaseFormData: Partial<CaseFormData> = {
       line2: "Victoria Island",
     },
     contactPhone: "+234 801 234 5678",
-    contactEmail: "john.doe@example.com"
+    contactEmail: "john.doe@example.com",
   },
   visaDetails: {
     countryOfNationality: "Nigeria",
-    reasonForTravel: "Employment",
+    reasonForTravel: "Work",
     visaType: "Long Stay (D)",
     journeyType: "Single",
-    purposeOfTravel: "Critical Skills Work Permit",
-    passportType: "Ordinary Passport",
+    purposeOfTravel: "Employment",
+    passportType: "Ordinary",
     passportNumber: "A12345678",
     issuingAuthority: "Nigeria Immigration Service",
     dateOfIssue: "01/01/2020",
     dateOfExpiry: "01/01/2030",
     proposedDates: {
-      from: "01/03/2025",
-      to: "01/03/2027"
-    }
+      from: "01/06/2025",
+      to: "01/06/2026",
+    },
   },
   additionalInfo: {
     previousApplications: false,
     refusedVisa: false,
     criminalConvictions: false,
     medicalConditions: false,
-    additionalDetails: "First-time applicant for Irish visa"
+    additionalDetails: "",
   },
-  documents: [
-    {
-      id: "doc-001",
-      name: "passport-copy.pdf",
-      type: "Passport Copy",
-      size: 2048576,
-      uploadDate: "2025-01-15T12:00:00Z",
-      status: "verified"
-    },
-    {
-      id: "doc-002",
-      name: "job-offer-letter.pdf",
-      type: "Job Offer Letter",
-      size: 1024768,
-      uploadDate: "2025-01-15T12:05:00Z",
-      status: "verified"
-    }
-  ]
-};
-
-// Helper functions for mock data
-export const getStepsByPhase = (phase: WorkflowPhase): ExtendedApplicationStep[] => {
-  return mock12StepWorkflow.filter(step => step.phase === phase);
-};
-
-export const getCurrentStep = (): ExtendedApplicationStep | undefined => {
-  return mock12StepWorkflow.find(step => step.status === 'in_progress');
-};
-
-export const getCompletedSteps = (): ExtendedApplicationStep[] => {
-  return mock12StepWorkflow.filter(step => step.status === 'completed');
-};
-
-export const getPendingSteps = (): ExtendedApplicationStep[] => {
-  return mock12StepWorkflow.filter(step => step.status === 'pending');
-};
-
-export const getChecklistForStep = (stepId: number, checklistProgress?: ChecklistProgress): ChecklistItem[] => {
-  if (!checklistProgress) return [];
-  
-  // Map specific checklist items to workflow steps
-  const stepChecklistMapping: Record<number, string[]> = {
-    1: [], // Personal info - no specific checklist items
-    2: [], // Visa details - no specific checklist items
-    3: [], // Additional info - no specific checklist items
-    4: ['critical-001', 'critical-002', 'critical-003', 'recommended-001'], // Document upload
-    5: [], // Review - all items
-  };
-  
-  const itemIds = stepChecklistMapping[stepId] || [];
-  const allItems = [
-    ...checklistProgress.critical,
-    ...checklistProgress.recommended,
-    ...checklistProgress.optional,
-    ...checklistProgress.enhancement
-  ];
-  
-  return allItems.filter(item => itemIds.includes(item.id));
+  documents: [],
+  reviewData: {
+    completionPercentage: 60,
+    criticalItemsComplete: false,
+    recommendedItemsComplete: false,
+    readyForSubmission: false,
+  },
 };

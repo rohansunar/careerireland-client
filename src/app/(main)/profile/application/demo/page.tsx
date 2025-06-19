@@ -5,14 +5,11 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ArrowRight, 
-  CheckCircle, 
-  FileText, 
-  Users, 
-  Send,
-  Clock,
-  MessageSquare,
+import {
+  ArrowRight,
+  CheckCircle,
+  FileText,
+  Users,
   Star
 } from "lucide-react";
 
@@ -23,12 +20,12 @@ const DemoPage: React.FC = () => {
   const router = useRouter();
 
   const handleSave = async (data: CaseFormData) => {
-    console.log('Demo: Saving case data:', data);
+    // Demo: Save case data
     alert('Demo: Application saved successfully!');
   };
 
   const handleSubmit = async (data: CaseFormData) => {
-    console.log('Demo: Submitting case data:', data);
+    // Demo: Submit case data
     alert('Demo: Application submitted successfully!');
   };
 

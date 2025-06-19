@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, AlertTriangle, FileText } from "lucide-react";
+import { CheckCircle, AlertTriangle, FileText } from "lucide-react";
 
 import { DecisionDetails, AppealDetails } from "../types/workflow.types";
 

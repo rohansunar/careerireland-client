@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, User, AlertCircle, Clock, CheckCircle, XCircle, FileText, Eye, Info } from "lucide-react";
+import { ArrowLeft, Calendar, User, Clock, CheckCircle, XCircle, FileText, Eye, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -69,19 +69,13 @@ const ApplicationPage: React.FC = () => {
 
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [selectedStep, setSelectedStep] = useState<number | null>(1);
-  const [fileData, setFileData] = useState<Record<string, File | null>>({});
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<
     Record<string, { name: string; url: string; status: string }>
   >({});
 
-  // useEffect(() => {
-  //     if (data && selectedStep !== 0) {
-  //       setSelectedStep(data.current_step);
-  //     }
-  //   }, [data, selectedStep]);
-  const { mutate: submitDocument, error } = useSubmitApplicationDocument();
+  const { mutate: submitDocument } = useSubmitApplicationDocument();
 
   const handleFieldChange = (stepId: number, fieldId: string, value: any) => {
     setFormData((prev) => ({ ...prev, [`${stepId}-${fieldId}`]: value }));
@@ -123,7 +117,6 @@ const ApplicationPage: React.FC = () => {
         ...prev,
         [key]: "Invalid file type. Allowed: PDF, JPG, JPEG, PNG, DOC.",
       }));
-      setFileData((prev) => ({ ...prev, [key]: null }));
       return;
     }
     if (file.size > maxSize) {
@@ -131,7 +124,6 @@ const ApplicationPage: React.FC = () => {
         ...prev,
         [key]: "File size exceeds 500KB limit.",
       }));
-      setFileData((prev) => ({ ...prev, [key]: null }));
       return;
     }
     setFormErrors((prev) => {
@@ -139,7 +131,7 @@ const ApplicationPage: React.FC = () => {
       delete newErrors[key];
       return newErrors;
     });
-    setFileData((prev) => ({ ...prev, [key]: file }));
+
     submitDocument(
       {
         applicationId: caseId,
@@ -149,7 +141,7 @@ const ApplicationPage: React.FC = () => {
       },
       {
         onSuccess: (res) => {
-          console.log("✅ Upload success:", res);
+          // Upload successful
           setUploadedFiles((prev) => ({
             ...prev,
             [key]: {
@@ -159,8 +151,12 @@ const ApplicationPage: React.FC = () => {
             },
           }));
         },
-        onError: (error) => {
-          console.error("❌ Upload failed:", error);
+        onError: () => {
+          // Handle upload error
+          setFormErrors((prev) => ({
+            ...prev,
+            [key]: "Upload failed. Please try again.",
+          }));
         },
       }
     );
@@ -170,7 +166,7 @@ const ApplicationPage: React.FC = () => {
 
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const { mutate: submitStep, isPending } = useSubmitApplicationStep();
+  const { mutate: submitStep } = useSubmitApplicationStep();
 
   const handleFormSubmit = (stepId: number) => {
     const step = steps.find((s) => s.id === stepId);
@@ -236,8 +232,12 @@ const ApplicationPage: React.FC = () => {
           }
           setSelectedStep(stepId + 1);
         },
-        onError: (error) => {
-          console.error("Submission failed:", error);
+        onError: () => {
+          // Handle submission error
+          setFormErrors((prev) => ({
+            ...prev,
+            [`${stepId}-submit`]: "Submission failed. Please try again.",
+          }));
         },
       });
     }

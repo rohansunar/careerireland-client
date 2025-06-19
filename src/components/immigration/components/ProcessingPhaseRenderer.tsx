@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, FileText, CheckCircle } from "lucide-react";
+import { Users, Calendar, FileText } from "lucide-react";
 
 import { ExtendedApplicationStep } from "../types/workflow.types";
 

@@ -1,5 +1,6 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import Image from 'next/image';
 import { Unplug } from 'lucide-react'; // Importing the Unplug icon from lucide-react
 
 const MaintenancePage = () => {
@@ -23,11 +24,11 @@ const MaintenancePage = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       {/* Logo */}
       <div className="mb-8">
-        <img src="/logo.png" alt="Logo" className="w-40 h-auto" /> {/* Logo centered at the top */}
+        <Image src="/logo.png" alt="Logo" width={160} height={80} className="w-40 h-auto" /> {/* Logo centered at the top */}
       </div>
 
       {/* Maintenance Heading */}
-      <h1 className="text-5xl font-bold text-gray-800 mb-4">We're Undergoing Maintenance</h1>
+      <h1 className="text-5xl font-bold text-gray-800 mb-4">We&apos;re Undergoing Maintenance</h1>
       <p className="text-xl text-gray-600 mb-6">We are working hard to improve the site. Please check back later.</p>
       
       {/* Container for Unplug Icon with Background Animation */}

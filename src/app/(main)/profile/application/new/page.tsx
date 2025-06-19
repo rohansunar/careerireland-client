@@ -11,15 +11,15 @@ const NewApplicationPage: React.FC = () => {
   const handleSave = async (data: CaseFormData) => {
     try {
       // TODO: Implement save to backend
-      console.log('Saving case data:', data);
-      
+      // Save case data to backend
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Show success message
       alert('Application saved successfully!');
     } catch (error) {
-      console.error('Save failed:', error);
+      // Handle save error
       alert('Failed to save application. Please try again.');
     }
   };
@@ -27,16 +27,16 @@ const NewApplicationPage: React.FC = () => {
   const handleSubmit = async (data: CaseFormData) => {
     try {
       // TODO: Implement submit to backend
-      console.log('Submitting case data:', data);
-      
+      // Submit case data to backend
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Show success message and redirect
       alert('Application submitted successfully!');
       router.push('/profile/application');
     } catch (error) {
-      console.error('Submit failed:', error);
+      // Handle submit error
       alert('Failed to submit application. Please try again.');
     }
   };

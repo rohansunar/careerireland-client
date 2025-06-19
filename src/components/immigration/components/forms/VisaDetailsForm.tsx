@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Calendar, Passport } from "lucide-react";
+import { FileText, Calendar, Shield } from "lucide-react";
 
 import { CaseFormData, ChecklistProgress } from "../../types/workflow.types";
 
@@ -47,7 +47,7 @@ const VisaDetailsForm: React.FC<VisaDetailsFormProps> = ({
             </Badge>
             <div className="space-y-2 text-sm text-gray-500">
               <div className="flex items-center justify-center gap-2">
-                <Passport size={14} />
+                <Shield size={14} />
                 <span>Passport Information</span>
               </div>
               <div className="flex items-center justify-center gap-2">
