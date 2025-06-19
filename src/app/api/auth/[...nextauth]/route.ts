@@ -49,10 +49,10 @@ export const authOptions: NextAuthOptions = {
         });
         const user = await res.json();
 
-        // If there's an error from the backend, throw an error with the message
-        // This will be caught by NextAuth and passed to the error page
+        // If there's an error from the backend, return null to prevent sign-in
+        // The error will be handled in the signIn callback
         if (user.error) {
-          throw new Error(user.message || "Invalid credentials");
+          return null;
         }
 
         return user;
@@ -91,9 +91,12 @@ export const authOptions: NextAuthOptions = {
     error: "/auth/login",
   },
   callbacks: {
-    async signIn() {
-      // Since we're handling errors in the authorize function by throwing errors,
-      // we can simply return true here as errors will be caught by NextAuth
+    async signIn({ user }) {
+      // If user is null (failed authentication), prevent sign-in
+      // NextAuth will redirect to the signIn page automatically
+      if (!user) {
+        return false;
+      }
       return true;
     },
     async jwt({ token, user }) {
