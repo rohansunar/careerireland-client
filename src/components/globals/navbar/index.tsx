@@ -29,6 +29,7 @@ const Navbar = () => {
       url: "/visa-service",
       subLinks: [
         { name: "Home", url: "/visa-service" },
+        { name: "Start New Application", url: "/profile/application/new" },
         {
           name: "Immigration Support and Services",
           url: "/visa-service/#immigration-services",

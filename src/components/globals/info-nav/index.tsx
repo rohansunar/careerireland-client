@@ -6,7 +6,14 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import UserMenu from "@/components/globals/info-nav/user-menu";
 
 const InfoNavbar = async () => {
-  const session = await getServerSession(authOptions);
+  let session = null;
+
+  try {
+    session = await getServerSession(authOptions);
+  } catch (error) {
+    // Silently handle JWT decryption errors on initial page load
+    session = null;
+  }
 
   return (
     <div className="w-full border-b bg-background/95  backdrop-blur supports-[backdrop-filter]:bg-background/60">

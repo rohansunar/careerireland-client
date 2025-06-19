@@ -192,61 +192,19 @@ export const useReview = () => {
 };
 
 // ...............Payments .......................
+// NEW UNIFIED PAYMENT ENDPOINTS
 
 export const usePackage = () => {
   const { data: session } = useSession();
   const router = useRouter();
   return useMutation({
     mutationFn: async (data: { packageId: string }) => {
-      const res = await axios.post(`${apiUrl}/payment/package`, data, {
-        headers: {
-          Authorization: `Bearer ${session?.backendTokens.accessToken}`,
-        },
-      });
-      return res.data;
-    },
-    onSuccess: (data) => {
-      router.push(data.url);
-    },
-    onError: (error) => {
-      // @ts-ignore
-      toast.error(error.response.data.message, {
-        description: "Please try after few min",
-      });
-    },
-  });
-};
-export const useMentorService = () => {
-  const { data: session } = useSession();
-  const router = useRouter();
-  return useMutation({
-    mutationFn: async (data: { serviceId: string }) => {
-      const res = await axios.post(`${apiUrl}/payment/mentor-service`, data, {
-        headers: {
-          Authorization: `Bearer ${session?.backendTokens.accessToken}`,
-        },
-      });
-      return res.data;
-    },
-    onSuccess: (data) => {
-      router.push(data.url);
-    },
-    onError: (error) => {
-      // @ts-ignore
-      toast.error(error.response.data.message, {
-        description: "Please try after few min",
-      });
-    },
-  });
-};
-export const useImmigrationService = () => {
-  const { data: session } = useSession();
-  const router = useRouter();
-  return useMutation({
-    mutationFn: async (data: { immigration_serviceId: string }) => {
       const res = await axios.post(
-        `${apiUrl}/payment/immigration-service`,
-        data,
+        `${apiUrl}/v2/payment/create`,
+        {
+          serviceType: "service",
+          serviceId: data.packageId,
+        },
         {
           headers: {
             Authorization: `Bearer ${session?.backendTokens.accessToken}`,
@@ -266,16 +224,48 @@ export const useImmigrationService = () => {
     },
   });
 };
-export const useTraining = () => {
+
+// OLD ENDPOINT - KEPT FOR ROLLBACK (UNUSED)
+// export const usePackageOld = () => {
+//   const { data: session } = useSession();
+//   const router = useRouter();
+//   return useMutation({
+//     mutationFn: async (data: { packageId: string }) => {
+//       const res = await axios.post(`${apiUrl}/payment/package`, data, {
+//         headers: {
+//           Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+//         },
+//       });
+//       return res.data;
+//     },
+//     onSuccess: (data) => {
+//       router.push(data.url);
+//     },
+//     onError: (error) => {
+//       // @ts-ignore
+//       toast.error(error.response.data.message, {
+//         description: "Please try after few min",
+//       });
+//     },
+//   });
+// };
+export const useMentorService = () => {
   const { data: session } = useSession();
   const router = useRouter();
   return useMutation({
-    mutationFn: async (data: { trainingId: string }) => {
-      const res = await axios.post(`${apiUrl}/payment/training`, data, {
-        headers: {
-          Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+    mutationFn: async (data: { serviceId: string }) => {
+      const res = await axios.post(
+        `${apiUrl}/v2/payment/create`,
+        {
+          serviceType: "service",
+          serviceId: data.serviceId,
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+          },
+        }
+      );
       return res.data;
     },
     onSuccess: (data) => {
@@ -289,17 +279,110 @@ export const useTraining = () => {
     },
   });
 };
-// ...............Guest .......................
 
-export const useGuestPackage = () => {
+// OLD ENDPOINT - KEPT FOR ROLLBACK (UNUSED)
+// export const useMentorServiceOld = () => {
+//   const { data: session } = useSession();
+//   const router = useRouter();
+//   return useMutation({
+//     mutationFn: async (data: { serviceId: string }) => {
+//       const res = await axios.post(`${apiUrl}/payment/mentor-service`, data, {
+//         headers: {
+//           Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+//         },
+//       });
+//       return res.data;
+//     },
+//     onSuccess: (data) => {
+//       router.push(data.url);
+//     },
+//     onError: (error) => {
+//       // @ts-ignore
+//       toast.error(error.response.data.message, {
+//         description: "Please try after few min",
+//       });
+//     },
+//   });
+// };
+export const useImmigrationService = () => {
+  console.log("useImmigrationService", apiUrl);
+  const { data: session } = useSession();
   const router = useRouter();
   return useMutation({
-    mutationFn: async (data: IGuestPurchase) => {
-      const { id, ...result } = data;
-      const res = await axios.post(`${apiUrl}/payment/guest-package`, {
-        ...result,
-        packageId: id,
+    mutationFn: async (data: { immigration_serviceId: string }) => {
+      const res = await axios.post(
+        `${apiUrl}/v2/payment/create`,
+        {
+          serviceType: "immigration",
+          serviceId: data.immigration_serviceId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+          },
+        }
+      );
+      return res.data;
+    },
+    onSuccess: (data) => {
+      router.push(data.url);
+    },
+    onError: (error) => {
+      console.log(error);
+      // @ts-ignore
+      toast.error(error.response.data.message, {
+        description: "Please try after few min",
       });
+    },
+  });
+};
+
+// OLD ENDPOINT - KEPT FOR ROLLBACK (UNUSED)
+// export const useImmigrationServiceOld = () => {
+//   const { data: session } = useSession();
+//   const router = useRouter();
+//   return useMutation({
+//     mutationFn: async (data: { immigration_serviceId: string }) => {
+//       const res = await axios.post(
+//         `${apiUrl}/payment/immigration-service`,
+//         data,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+//           },
+//         }
+//       );
+//       return res.data;
+//     },
+//     onSuccess: (data) => {
+//       router.push(data.url);
+//     },
+//     onError: (error) => {
+//       // @ts-ignore
+//       toast.error(error.response.data.message, {
+//         description: "Please try after few min",
+//       });
+//     },
+//   });
+// };
+
+export const useTraining = () => {
+  const { data: session } = useSession();
+  const router = useRouter();
+  return useMutation({
+    mutationFn: async (data: { trainingId: string }) => {
+      const res = await axios.post(
+        `${apiUrl}/v2/payment/create`,
+        {
+          serviceType: "training",
+          serviceId: data.trainingId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+          },
+        }
+      );
       return res.data;
     },
     onSuccess: (data) => {
@@ -307,17 +390,49 @@ export const useGuestPackage = () => {
     },
     onError: (error) => {
       // @ts-ignore
-      toast.error(error.response.data.message, failed);
+      toast.error(error.response.data.message, {
+        description: "Please try after few min",
+      });
     },
   });
 };
-export const useGuestMentorService = () => {
+
+// OLD ENDPOINT - KEPT FOR ROLLBACK (UNUSED)
+// export const useTrainingOld = () => {
+//   const { data: session } = useSession();
+//   const router = useRouter();
+//   return useMutation({
+//     mutationFn: async (data: { trainingId: string }) => {
+//       const res = await axios.post(`${apiUrl}/payment/training`, data, {
+//         headers: {
+//           Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+//         },
+//       });
+//       return res.data;
+//     },
+//     onSuccess: (data) => {
+//       router.push(data.url);
+//     },
+//     onError: (error) => {
+//       // @ts-ignore
+//       toast.error(error.response.data.message, {
+//         description: "Please try after few min",
+//       });
+//     },
+//   });
+// };
+// ...............Guest .......................
+
+export const useGuestPackage = () => {
   const router = useRouter();
   return useMutation({
     mutationFn: async (data: IGuestPurchase) => {
-      const { id, ...result } = data;
-      const res = await axios.post(`${apiUrl}/payment/guest-service`, {
-        ...result,
+      const { id, mobile_no: mobileNo, ...result } = data;
+      const res = await axios.post(`${apiUrl}/v2/payment/guest`, {
+        name: result.name,
+        email: result.email,
+        mobile: mobileNo,
+        serviceType: "service",
         serviceId: id,
       });
       return res.data;
@@ -331,14 +446,85 @@ export const useGuestMentorService = () => {
     },
   });
 };
+
+// OLD ENDPOINT - KEPT FOR ROLLBACK (UNUSED)
+// export const useGuestPackageOld = () => {
+//   const router = useRouter();
+//   return useMutation({
+//     mutationFn: async (data: IGuestPurchase) => {
+//       const { id, ...result } = data;
+//       const res = await axios.post(`${apiUrl}/payment/guest-package`, {
+//         ...result,
+//         packageId: id,
+//       });
+//       return res.data;
+//     },
+//     onSuccess: (data) => {
+//       router.push(data.url);
+//     },
+//     onError: (error) => {
+//       // @ts-ignore
+//       toast.error(error.response.data.message, failed);
+//     },
+//   });
+// };
+
+export const useGuestMentorService = () => {
+  const router = useRouter();
+  return useMutation({
+    mutationFn: async (data: IGuestPurchase) => {
+      const { id, mobile_no: mobileNo, ...result } = data;
+      const res = await axios.post(`${apiUrl}/v2/payment/guest`, {
+        name: result.name,
+        email: result.email,
+        mobile: mobileNo,
+        serviceType: "service",
+        serviceId: id,
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      router.push(data.url);
+    },
+    onError: (error) => {
+      // @ts-ignore
+      toast.error(error.response.data.message, failed);
+    },
+  });
+};
+
+// OLD ENDPOINT - KEPT FOR ROLLBACK (UNUSED)
+// export const useGuestMentorServiceOld = () => {
+//   const router = useRouter();
+//   return useMutation({
+//     mutationFn: async (data: IGuestPurchase) => {
+//       const { id, ...result } = data;
+//       const res = await axios.post(`${apiUrl}/payment/guest-service`, {
+//         ...result,
+//         serviceId: id,
+//       });
+//       return res.data;
+//     },
+//     onSuccess: (data) => {
+//       router.push(data.url);
+//     },
+//     onError: (error) => {
+//       // @ts-ignore
+//       toast.error(error.response.data.message, failed);
+//     },
+//   });
+// };
 export const useGuestImmigrationService = () => {
   const router = useRouter();
   return useMutation({
     mutationFn: async (data: IGuestPurchase) => {
-      const { id, ...result } = data;
-      const res = await axios.post(`${apiUrl}/payment/guest-immigration`, {
-        ...result,
-        immigration_serviceId: id,
+      const { id, mobile_no: mobileNo, ...result } = data;
+      const res = await axios.post(`${apiUrl}/v2/payment/guest`, {
+        name: result.name,
+        email: result.email,
+        mobile: mobileNo,
+        serviceType: "immigration",
+        serviceId: id,
       });
       return res.data;
     },
@@ -351,14 +537,40 @@ export const useGuestImmigrationService = () => {
     },
   });
 };
+
+// OLD ENDPOINT - KEPT FOR ROLLBACK (UNUSED)
+// export const useGuestImmigrationServiceOld = () => {
+//   const router = useRouter();
+//   return useMutation({
+//     mutationFn: async (data: IGuestPurchase) => {
+//       const { id, ...result } = data;
+//       const res = await axios.post(`${apiUrl}/payment/guest-immigration`, {
+//         ...result,
+//         immigration_serviceId: id,
+//       });
+//       return res.data;
+//     },
+//     onSuccess: (data) => {
+//       router.push(data.url);
+//     },
+//     onError: (error) => {
+//       // @ts-ignore
+//       toast.error(error.response.data.message, failed);
+//     },
+//   });
+// };
+
 export const useGuestTrainingService = () => {
   const router = useRouter();
   return useMutation({
     mutationFn: async (data: IGuestPurchase) => {
-      const { id, ...result } = data;
-      const res = await axios.post(`${apiUrl}/payment/guest-training`, {
-        ...result,
-        trainingId: id,
+      const { id, mobile_no: mobileNo, ...result } = data;
+      const res = await axios.post(`${apiUrl}/v2/payment/guest`, {
+        name: result.name,
+        email: result.email,
+        mobile: mobileNo,
+        serviceType: "training",
+        serviceId: id,
       });
       return res.data;
     },
@@ -371,6 +583,28 @@ export const useGuestTrainingService = () => {
     },
   });
 };
+
+// OLD ENDPOINT - KEPT FOR ROLLBACK (UNUSED)
+// export const useGuestTrainingServiceOld = () => {
+//   const router = useRouter();
+//   return useMutation({
+//     mutationFn: async (data: IGuestPurchase) => {
+//       const { id, ...result } = data;
+//       const res = await axios.post(`${apiUrl}/payment/guest-training`, {
+//         ...result,
+//         trainingId: id,
+//       });
+//       return res.data;
+//     },
+//     onSuccess: (data) => {
+//       router.push(data.url);
+//     },
+//     onError: (error) => {
+//       // @ts-ignore
+//       toast.error(error.response.data.message, failed);
+//     },
+//   });
+// };
 
 // ............... Password.......................
 

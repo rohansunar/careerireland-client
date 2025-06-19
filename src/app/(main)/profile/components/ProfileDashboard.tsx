@@ -2,8 +2,9 @@
 
 import React from "react";
 import {
-  DollarSign,
+  FileText,
 } from "lucide-react";
+import { useImmApplication } from "@/hooks/use-query";
 // Using global IProfile interface
 
 interface DashboardBoxProps {
@@ -46,8 +47,9 @@ interface ProfileDashboardProps {
 }
 
 const ProfileDashboard: React.FC<ProfileDashboardProps> = ({ user }) => {
-  // Parse total spending (remove currency symbol and convert to number for display)
-  const totalSpent = user.total_spent || "$0";
+  // Fetch applications data to get the count
+  const { data: applicationsData } = useImmApplication();
+  const totalApplications = applicationsData?.data?.length || 0;
 
   return (
     <div className="space-y-6">
@@ -74,9 +76,10 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({ user }) => {
       {/* Main Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 max-w-md">
         <DashboardBox
-          title="Total Revenue"
-          value={totalSpent || "€26,618.00"}
-          icon={<DollarSign className="w-6 h-6" />}
+          title="Total Applications"
+          value={totalApplications}
+          description="Immigration applications submitted"
+          icon={<FileText className="w-6 h-6" />}
         />
       </div>
 
