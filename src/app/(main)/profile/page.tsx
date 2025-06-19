@@ -54,7 +54,7 @@ const Contact = lazy(
 import LoadingSpinner from "./components/LoadingSpinner";
 import ErrorBoundary from "./components/ErrorBoundary";
 
-const ProfilePage: React.FC = () => {
+const ProfileContent: React.FC = () => {
   const searchParams = useSearchParams();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [selectedMenu, setSelectedMenu] = useState<MenuKey>("dashboard");
@@ -289,6 +289,14 @@ const ProfilePage: React.FC = () => {
         </div>
       </main>
     </div>
+  );
+};
+
+const ProfilePage: React.FC = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProfileContent />
+    </Suspense>
   );
 };
 
