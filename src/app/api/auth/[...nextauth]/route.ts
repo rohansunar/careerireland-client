@@ -49,6 +49,12 @@ export const authOptions: NextAuthOptions = {
         });
         const user = await res.json();
 
+        // If there's an error from the backend, throw an error with the message
+        // This will be caught by NextAuth and passed to the error page
+        if (user.error) {
+          throw new Error(user.message || "Invalid credentials");
+        }
+
         return user;
       },
     }),
@@ -85,18 +91,10 @@ export const authOptions: NextAuthOptions = {
     error: "/auth/login",
   },
   callbacks: {
-    async signIn({ user, account }) {
-      // @ts-ignore
-      const { error, message } = user;
-      if (!error) return true;
-      switch (account?.provider) {
-        case "google":
-          return `/auth/login?error=${message}`; // This is where you set your error
-        case "credentials":
-          return `/auth/login?error=${message}`; // This is where you set your error
-        default:
-          return true;
-      }
+    async signIn() {
+      // Since we're handling errors in the authorize function by throwing errors,
+      // we can simply return true here as errors will be caught by NextAuth
+      return true;
     },
     async jwt({ token, user }) {
       if (user) return { ...token, ...user };
