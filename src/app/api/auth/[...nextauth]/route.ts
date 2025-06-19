@@ -37,48 +37,96 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) return null;
         const { email, password } = credentials;
-        const res = await fetch(apiUrl + "/user/login", {
-          method: "POST",
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        const user = await res.json();
 
-        // If there's an error from the backend, return null to prevent sign-in
-        // The error will be handled in the signIn callback
-        if (user.error) {
+        try {
+          const res = await fetch(apiUrl + "/user/login", {
+            method: "POST",
+            body: JSON.stringify({
+              email,
+              password,
+            }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          // Check if the response is successful
+          if (!res.ok) {
+            const errorData = await res.json();
+            if (process.env.NODE_ENV === "development") {
+              console.error("Login API error:", errorData);
+            }
+            // Return null to trigger NextAuth error handling
+            return null;
+          }
+
+          const user = await res.json();
+
+          // Validate the response structure
+          if (!user || !user.user || !user.backendTokens) {
+            if (process.env.NODE_ENV === "development") {
+              console.error("Invalid user response structure:", user);
+            }
+            return null;
+          }
+
+          return user;
+        } catch (error) {
+          if (process.env.NODE_ENV === "development") {
+            console.error("Login request failed:", error);
+          }
           return null;
         }
-
-        return user;
       },
     }),
     GoogleProvider({
-      clientId: process.env.GOOGLE_ID,
-      clientSecret: process.env.GOOGLE_SECRET,
-
+      clientId: process.env.GOOGLE_ID!,
+      clientSecret: process.env.GOOGLE_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
       async profile(profile) {
-        const { sub: id, name, email, picture: image } = profile;
+        try {
+          const { sub: id, name, email, picture: image } = profile;
 
-        const res = await fetch(apiUrl + "/user/google", {
-          method: "POST",
-          body: JSON.stringify({
-            email: email,
-            name: name,
-            emailVerified: true,
-            image: image,
-          }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        const user = await res.json();
-        return { ...user, id };
+          const res = await fetch(apiUrl + "/user/google", {
+            method: "POST",
+            body: JSON.stringify({
+              email: email,
+              name: name,
+              emailVerified: true,
+              image: image,
+            }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!res.ok) {
+            if (process.env.NODE_ENV === "development") {
+              console.error(
+                "Google profile API error:",
+                res.status,
+                res.statusText
+              );
+            }
+            throw new Error(
+              `Failed to create/fetch user profile: ${res.status}`
+            );
+          }
+
+          const user = await res.json();
+          return { ...user, id };
+        } catch (error) {
+          if (process.env.NODE_ENV === "development") {
+            console.error("Google profile processing error:", error);
+          }
+          throw error;
+        }
       },
     }),
   ],
@@ -92,25 +140,56 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user }) {
-      // If user is null (failed authentication), prevent sign-in
-      // NextAuth will redirect to the signIn page automatically
-      if (!user) {
+      try {
+        // If user is null (failed authentication), prevent sign-in
+        if (!user) {
+          if (process.env.NODE_ENV === "development") {
+            console.error("SignIn callback: User is null");
+          }
+          // Return false to trigger redirect to error page with proper error handling
+          return false;
+        }
+
+        // Authentication successful - debug mode will handle logging
+
+        return true;
+      } catch (error) {
+        if (process.env.NODE_ENV === "development") {
+          console.error("SignIn callback error:", error);
+        }
         return false;
       }
-      return true;
     },
     async jwt({ token, user }) {
-      if (user) return { ...token, ...user };
+      // On initial sign in, user object contains the backend response
+      if (user) {
+        // Handle the nested structure from backend (credentials provider)
+        const userWithBackend = user as any;
+        if (userWithBackend.user && userWithBackend.backendTokens) {
+          // This is the structure from credentials provider
+          return {
+            ...token,
+            user: userWithBackend.user,
+            backendTokens: userWithBackend.backendTokens,
+          };
+        } else {
+          // This might be from Google provider or other cases
+          return { ...token, ...user };
+        }
+      }
 
       // Check if token has backendTokens before accessing
       if (!token.backendTokens) return token;
 
+      // Check if token is expired
       if (new Date().getTime() < token.backendTokens.expiresIn) return token;
 
       try {
         return await refreshToken(token);
       } catch (error) {
-        console.error("Token refresh failed:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Token refresh failed:", error);
+        }
         // Return token without refresh if refresh fails
         return token;
       }
@@ -118,15 +197,24 @@ export const authOptions: NextAuthOptions = {
 
     async session({ token, session }) {
       try {
+        // Ensure we have the user data in the session
         if (token.user) {
-          session.user = token.user;
+          session.user = {
+            ...session.user,
+            ...token.user,
+          };
         }
+
+        // Include backend tokens for API calls
         if (token.backendTokens) {
           session.backendTokens = token.backendTokens;
         }
+
         return session;
       } catch (error) {
-        console.error("Session callback error:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Session callback error:", error);
+        }
         // Return the original session if there's an error
         return session;
       }
