@@ -49,6 +49,12 @@ export const authOptions: NextAuthOptions = {
         });
         const user = await res.json();
 
+        // If there's an error from the backend, return null to prevent sign-in
+        // The error will be handled in the signIn callback
+        if (user.error) {
+          return null;
+        }
+
         return user;
       },
     }),
@@ -85,18 +91,13 @@ export const authOptions: NextAuthOptions = {
     error: "/auth/login",
   },
   callbacks: {
-    async signIn({ user, account }) {
-      // @ts-ignore
-      const { error, message } = user;
-      if (!error) return true;
-      switch (account?.provider) {
-        case "google":
-          return `/auth/login?error=${message}`; // This is where you set your error
-        case "credentials":
-          return `/auth/login?error=${message}`; // This is where you set your error
-        default:
-          return true;
+    async signIn({ user }) {
+      // If user is null (failed authentication), prevent sign-in
+      // NextAuth will redirect to the signIn page automatically
+      if (!user) {
+        return false;
       }
+      return true;
     },
     async jwt({ token, user }) {
       if (user) return { ...token, ...user };
