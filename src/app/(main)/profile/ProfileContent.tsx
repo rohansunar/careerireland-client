@@ -3,9 +3,12 @@
 
 import React, { useState, Suspense, lazy, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Tabs } from "@radix-ui/react-tabs";
 import { MenuKey } from "./components/types";
 import { Sidebar } from "./components/Sidebar";
+import { useQuery } from "@tanstack/react-query";
+import { apiUrl } from "@/util/urls";
 
 // Lazy imports with explicit typing
 const ProfileDashboard = lazy(
@@ -56,8 +59,26 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 const ProfileContent: React.FC = () => {
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [selectedMenu, setSelectedMenu] = useState<MenuKey>("dashboard");
+
+  // Fetch real user profile data
+  const { data: userProfile, isLoading, isError } = useQuery({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
+      const res = await fetch(`${apiUrl}/user`, {
+        headers: {
+          Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+        },
+      });
+      if (!res.ok) {
+        throw new Error('Failed to fetch user profile');
+      }
+      return res.json() as Promise<IProfile>;
+    },
+    enabled: !!session?.backendTokens?.accessToken,
+  });
 
   // Handle URL parameters for navigation
   useEffect(() => {
@@ -79,171 +100,33 @@ const ProfileContent: React.FC = () => {
     }
   }, [searchParams]);
 
+  // Handle loading and error states
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingSpinner text="Loading profile..." />
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !userProfile) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Profile</h2>
+            <p className="text-gray-600">Please try refreshing the page or contact support if the issue persists.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Create a sanitized user object that hides sensitive fields from UI display
   const user: IProfile = {
-    id: "1",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    emailVerified: true,
-    image:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
-    createdAt: new Date("2024-01-01T00:00:00Z"),
-    updatedAt: new Date("2024-01-15T10:30:00Z"),
-    provider: "google",
-    total_spent: "$2,450",
-    reviews: [
-      {
-        id: "1",
-        message: "Excellent service!",
-        rating: 5,
-        createdAt: new Date("2024-01-15"),
-        updatedAt: new Date("2024-01-15"),
-        mentor: {
-          id: "1",
-          name: "Jane Smith",
-          email: "jane@example.com",
-          image: "",
-          desc: "Career Mentor",
-          designation: "Senior Consultant",
-        },
-        user: { name: "John Doe", image: null },
-      },
-      {
-        id: "2",
-        message: "Very helpful with my visa application.",
-        rating: 5,
-        createdAt: new Date("2024-02-01"),
-        updatedAt: new Date("2024-02-01"),
-        mentor: {
-          id: "2",
-          name: "Mike Johnson",
-          email: "mike@example.com",
-          image: "",
-          desc: "Immigration Expert",
-          designation: "Immigration Specialist",
-        },
-        user: { name: "John Doe", image: null },
-      },
-    ],
-    services: [
-      {
-        id: "1",
-        amount: 150,
-        status: "completed",
-        progress: "100%",
-        createdAt: "2024-01-15",
-        mentor_services: {
-          id: "1",
-          name: "CV Review Service",
-          amount: 150,
-          mentor: {
-            id: "1",
-            name: "Sarah Connor",
-            email: "sarah@careerireland.com",
-            image: "",
-            desc: "Career Development Specialist",
-            designation: "Senior Career Consultant",
-          },
-        },
-      },
-      {
-        id: "2",
-        amount: 200,
-        status: "active",
-        progress: "50%",
-        createdAt: "2024-02-01",
-        mentor_services: {
-          id: "2",
-          name: "Interview Preparation",
-          amount: 200,
-          mentor: {
-            id: "2",
-            name: "David Mitchell",
-            email: "david@careerireland.com",
-            image: "",
-            desc: "Interview Coach & HR Expert",
-            designation: "Lead Interview Coach",
-          },
-        },
-      },
-    ],
-    packages: [
-      {
-        id: "1",
-        amount: 299,
-        status: "completed",
-        progress: "100%",
-        createdAt: "2024-02-15",
-        package: { id: "1", name: "Career Starter Package", amount: 299 },
-      },
-      {
-        id: "2",
-        amount: 599,
-        status: "active",
-        progress: "75%",
-        createdAt: "2024-03-01",
-        package: { id: "2", name: "Professional Development", amount: 599 },
-      },
-    ],
-    training: [
-      {
-        id: "1",
-        amount: 99,
-        status: "completed",
-        progress: "100%",
-        createdAt: "2024-01-20",
-        training: {
-          id: "1",
-          name: "LinkedIn Optimization Workshop",
-          amount: 99,
-        },
-      },
-      {
-        id: "2",
-        amount: 149,
-        status: "active",
-        progress: "60%",
-        createdAt: "2024-02-10",
-        training: {
-          id: "2",
-          name: "Networking Skills Masterclass",
-          amount: 149,
-        },
-      },
-    ],
-    immigration_services: [
-      {
-        id: "1",
-        amount: 850,
-        status: "In Progress",
-        progress: "75%",
-        createdAt: "2024-01-15",
-        immigration_service: {
-          id: "1",
-          name: "Work Permit Application",
-          amount: 850,
-        },
-      },
-      {
-        id: "2",
-        amount: 450,
-        status: "Completed",
-        progress: "100%",
-        createdAt: "2024-02-01",
-        immigration_service: { id: "2", name: "Visa Extension", amount: 450 },
-      },
-      {
-        id: "3",
-        amount: 1200,
-        status: "Pending",
-        progress: "25%",
-        createdAt: "2024-03-10",
-        immigration_service: {
-          id: "3",
-          name: "Family Reunification",
-          amount: 1200,
-        },
-      },
-    ],
+    ...userProfile,
   };
 
   const renderContent = () => {

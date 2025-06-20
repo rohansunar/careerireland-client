@@ -11,7 +11,6 @@ interface Case {
   application_number: string;
   service_type: string;
   status?: string;
-  priority_level?: string;
   current_step?: string;
   created_at: string;
   updated_at: string;
@@ -61,18 +60,7 @@ const getStatusIcon = (status?: string) => {
   }
 };
 
-const getPriorityBadgeClass = (priority?: string) => {
-  switch (priority?.toLowerCase()) {
-    case "high":
-      return "bg-red-100 text-red-800 border-red-200";
-    case "medium":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    case "low":
-      return "bg-green-100 text-green-800 border-green-200";
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
-  }
-};
+
 
 const CasesTable: React.FC<CasesTableProps> = ({
   cases,
@@ -106,8 +94,8 @@ const CasesTable: React.FC<CasesTableProps> = ({
         <thead className="bg-gray-50">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Application</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type & Priority</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status & Step</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Step</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timeline</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
           </tr>
@@ -118,39 +106,25 @@ const CasesTable: React.FC<CasesTableProps> = ({
               <td className="px-6 py-4">
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-900">{c.application_number}</span>
-                  <span className="text-sm text-gray-500">{c.user.name}</span>
                 </div>
               </td>
 
               <td className="px-6 py-4">
-                <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-gray-900">{c.service_type}</span>
-                  {c.priority_level && (
-                    <Badge
-                      variant="outline"
-                      className={`w-fit text-xs ${getPriorityBadgeClass(c.priority_level)}`}
-                    >
-                      {c.priority_level} Priority
-                    </Badge>
-                  )}
-                </div>
+                {c.status && (
+                  <Badge
+                    variant="outline"
+                    className={`w-fit text-xs flex items-center gap-1 ${getStatusBadgeClass(c.status)}`}
+                  >
+                    {getStatusIcon(c.status)}
+                    {c.status}
+                  </Badge>
+                )}
               </td>
 
               <td className="px-6 py-4">
-                <div className="flex flex-col gap-2">
-                  {c.status && (
-                    <Badge
-                      variant="outline"
-                      className={`w-fit text-xs flex items-center gap-1 ${getStatusBadgeClass(c.status)}`}
-                    >
-                      {getStatusIcon(c.status)}
-                      {c.status}
-                    </Badge>
-                  )}
-                  {c.current_step && (
-                    <span className="text-xs text-gray-500">Step {c.current_step}</span>
-                  )}
-                </div>
+                {c.current_step && (
+                  <span className="text-sm text-gray-700 font-medium">Step {c.current_step}</span>
+                )}
               </td>
 
               <td className="px-6 py-4">
