@@ -116,27 +116,14 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ token, session }) {
-      try {
-        if (token.user) {
-          session.user = token.user;
-        }
-        if (token.backendTokens) {
-          session.backendTokens = token.backendTokens;
-        }
-        return session;
-      } catch (error) {
-        console.error("Session callback error:", error);
-        // Return the original session if there's an error
-        return session;
+      if (token.user) {
+        session.user = token.user;
       }
+      if (token.backendTokens) {
+        session.backendTokens = token.backendTokens;
+      }
+      return session;
     },
-  },
-  // Add debug mode for development to help identify JWT issues
-  debug: process.env.NODE_ENV === "development",
-  // Add JWT configuration to handle decryption issues
-  jwt: {
-    // Increase max age to match session
-    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 };
 

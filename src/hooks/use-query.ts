@@ -202,7 +202,7 @@ export const usePackage = () => {
       const res = await axios.post(
         `${apiUrl}/v2/payment/create`,
         {
-          serviceType: "service",
+          serviceType: "package",
           serviceId: data.packageId,
         },
         {
@@ -430,7 +430,7 @@ export const useGuestPackage = () => {
         name: result.name,
         email: result.email,
         mobile: mobileNo,
-        serviceType: "service",
+        serviceType: "package",
         serviceId: id,
       });
       return res.data;
