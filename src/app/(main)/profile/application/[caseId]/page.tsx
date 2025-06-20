@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, User, Clock, CheckCircle, XCircle, FileText, Eye, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -68,7 +68,7 @@ const ApplicationPage: React.FC = () => {
   const { data, isLoading, isError } = useImmApplicationId(caseId);
 
   const [formData, setFormData] = useState<Record<string, any>>({});
-  const [selectedStep, setSelectedStep] = useState<number | null>(1);
+  const [selectedStep, setSelectedStep] = useState<number | null>(null);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<
@@ -80,6 +80,11 @@ const ApplicationPage: React.FC = () => {
   const handleFieldChange = (stepId: number, fieldId: string, value: any) => {
     setFormData((prev) => ({ ...prev, [`${stepId}-${fieldId}`]: value }));
   };
+  useEffect(() => {
+    if (data && data.current_step) {
+      setSelectedStep(Number(data.current_step));
+    }
+  }, [data]);
 
   const allowedTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "application/msword"];
   const maxSize = 500 * 1024;
@@ -376,7 +381,7 @@ const ApplicationPage: React.FC = () => {
 
       {/* Step Form Content */}
       {steps.map((step, index) => (
-        selectedStep === step.id && (
+        selectedStep !== null && selectedStep === step.id && (
           <div key={step.id} className="p-4 border rounded-lg bg-white">
             <h2 className="text-lg font-semibold mb-2">{step.title}</h2>
             <p className="text-sm text-gray-600 mb-4">{step.description}</p>
