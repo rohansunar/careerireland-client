@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🔧 Enhanced
 
 - **Stage Name Display**: Improved Case ID section to show actual stage names instead of step numbers
+
   - Compares `current_step === steps[i].stageOrder` to find matching stage
   - Extracts and displays corresponding `stageName` from matched stage object
   - Falls back to step number format if stage name not found
@@ -40,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🎨 UI/UX Improvements
 
 - **Enhanced Error Handling**: Improved user experience with better error states
+
   - Added loading spinner with descriptive text for application details
   - Implemented user-friendly error messages with retry functionality
   - Added "Application Not Found" state with navigation back to applications
@@ -53,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🧪 Testing & Quality
 
 - **Updated Test Suite**: Fixed CasesTable test suite to match current data structure
+
   - Updated mock data to use current Case interface with proper field names
   - Fixed test expectations to match new table headers and data display
   - Corrected button text expectations and navigation testing
@@ -66,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🛠️ Technical Details
 
 #### Files Modified:
+
 - `src/app/(main)/profile/components/setting.tsx` - Removed delete account functionality
 - `src/app/(main)/profile/components/profile.tsx` - Updated to remove delete account component
 - `src/app/(main)/profile/application/[caseId]/page.tsx` - Added estimated completion field, enhanced stage display, improved error handling
@@ -73,11 +77,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `src/app/(main)/profile/components/__tests__/CasesTable.test.tsx` - Updated test suite for current data structure
 
 #### Interface Changes:
+
 - `ApplicationData` interface: Added optional `estimated_completion?: string` field
 - `SubmissionPayload` interface: Made `currentStep?: string` optional
 - Removed unused `getStatusBadgeVariant` function
 
 #### Security & Performance:
+
 - Implemented proper timeout cleanup to prevent memory leaks
 - Enhanced error handling with user-friendly messages
 - Maintained data integrity by moving stage progression to backend-only control
@@ -96,16 +102,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🗑️ Removed
 
 - **Document Upload Section**: Removed entire upload documents section from Document Vault feature
+
   - Eliminated drag & drop interface for document uploads
   - Removed "Choose Files" button and file format information
   - Removed upload progress indicators and file validation logic
 
 - **Statistics Dashboard Cards**: Removed all document statistics cards from Document Vault
+
   - Removed "Total Documents" card
   - Removed "Approved", "Pending", "Rejected", "Expired" status cards
   - Removed "Critical" priority documents card
 
 - **Status & Priority Management**: Eliminated document status and priority tracking system
+
   - Removed "Status & Priority" column from documents table
   - Removed DocumentStatus and DocumentPriority type definitions
   - Removed status filtering dropdown from document filters
@@ -118,12 +127,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🔧 Refactored
 
 - **Document Vault Component**: Streamlined DocumentVault.tsx for simplified document viewing
+
   - Updated UploadedDoc interface to remove status and priority properties
   - Simplified document filtering to category and search only
   - Updated static mock data to remove status and priority references
   - Cleaned up unused imports and functions
 
 - **Backend Integration**: Removed document upload API integration
+
   - Removed useSubmitApplicationDocument hook from use-query.ts
   - Updated application page to remove document upload functionality
   - Maintained existing document viewing and download capabilities
@@ -136,6 +147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🎨 UI/UX Improvements
 
 - **Simplified Interface**: Cleaner, more focused document management interface
+
   - Removed visual clutter from statistics cards and status indicators
   - Streamlined table layout with essential columns only
   - Maintained responsive design across all screen sizes
@@ -149,6 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🛠️ Technical Details
 
 #### Files Modified:
+
 - `src/app/(main)/profile/components/DocumentVault.tsx` - Main component refactoring
 - `src/hooks/use-query.ts` - Removed document upload API integration
 - `src/app/(main)/profile/application/[caseId]/page.tsx` - Removed upload functionality
@@ -156,6 +169,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `src/__tests__/fixtures/immigrationData.ts` - Updated test fixtures
 
 #### Removed Components:
+
 - Upload area with drag & drop functionality
 - Statistics dashboard with 6 metric cards
 - Status and priority filtering system
@@ -163,6 +177,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Status icons and priority badges
 
 #### Preserved Features:
+
 - Document viewing and downloading
 - Category-based filtering
 - Search functionality

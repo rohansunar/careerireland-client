@@ -2,15 +2,39 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, Clock, CheckCircle, XCircle, FileText, Eye, Info } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
+  FileText,
+  Eye,
+  Info,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { StepFormData, SubmissionPayload, useImmApplicationId, useSubmitApplicationDocument, useSubmitApplicationStep } from "@/hooks/use-query";
+import {
+  StepFormData,
+  SubmissionPayload,
+  useImmApplicationId,
+  useSubmitApplicationDocument,
+  useSubmitApplicationStep,
+} from "@/hooks/use-query";
 import { formatStatusText } from "@/lib/utils";
 
-type ApplicationStatus = "Draft" | "Submitted" | "Under_Review" | "Additional_Info_Required" | "Approved" | "Rejected" | "Completed" | "Cancelled" | "On_Hold";
+type ApplicationStatus =
+  | "Draft"
+  | "Submitted"
+  | "Under_Review"
+  | "Additional_Info_Required"
+  | "Approved"
+  | "Rejected"
+  | "Completed"
+  | "Cancelled"
+  | "On_Hold";
 
 interface Document {
   id: string;
@@ -74,7 +98,9 @@ const ApplicationPage: React.FC = () => {
   const [selectedStep, setSelectedStep] = useState<number | null>(null);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [dragOver, setDragOver] = useState(false);
-  const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>({});
+  const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>(
+    {}
+  );
   const [uploadedFiles, setUploadedFiles] = useState<
     Record<string, { name: string; url: string; status: string }>
   >({});
@@ -99,7 +125,13 @@ const ApplicationPage: React.FC = () => {
     };
   }, []);
 
-  const allowedTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "application/msword"];
+  const allowedTypes = [
+    "application/pdf",
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "application/msword",
+  ];
   const maxSize = 25 * 1024 * 1024; // 25MB
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -128,7 +160,12 @@ const ApplicationPage: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) handleFileValidation(file, stepId, documentId, documentName);
   };
-  const handleFileValidation = (file: File, stepId: number, documentId: string, documentName: string) => {
+  const handleFileValidation = (
+    file: File,
+    stepId: number,
+    documentId: string,
+    documentName: string
+  ) => {
     const key = `${stepId}-${documentId}`;
     if (!allowedTypes.includes(file.type)) {
       setFormErrors((prev) => ({
@@ -183,10 +220,7 @@ const ApplicationPage: React.FC = () => {
         },
       }
     );
-
   };
-
-
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -207,10 +241,12 @@ const ApplicationPage: React.FC = () => {
       fieldValue: formData[`${stepId}-${field.id}`] ?? field.fieldValue ?? "",
     }));
 
-    const formDataArray: StepFormData[] = [{
-      stageOrder: stepId,
-      fields,
-    }];
+    const formDataArray: StepFormData[] = [
+      {
+        stageOrder: stepId,
+        fields,
+      },
+    ];
 
     const payload: SubmissionPayload = {
       applicationId: applicationData.id,
@@ -230,10 +266,15 @@ const ApplicationPage: React.FC = () => {
           clearTimeout(saveMessageTimeoutRef.current);
         }
         // Clear message after 3 seconds
-        saveMessageTimeoutRef.current = setTimeout(() => setSaveMessage(""), 3000);
+        saveMessageTimeoutRef.current = setTimeout(
+          () => setSaveMessage(""),
+          3000
+        );
       },
       onError: (error: any) => {
-        const errorMessage = error?.response?.data?.message || "Failed to save form. Please try again.";
+        const errorMessage =
+          error?.response?.data?.message ||
+          "Failed to save form. Please try again.";
         setSaveMessage(errorMessage);
         setIsSaving(false);
         // Clear any existing timeout
@@ -241,7 +282,10 @@ const ApplicationPage: React.FC = () => {
           clearTimeout(saveMessageTimeoutRef.current);
         }
         // Clear message after 3 seconds
-        saveMessageTimeoutRef.current = setTimeout(() => setSaveMessage(""), 3000);
+        saveMessageTimeoutRef.current = setTimeout(
+          () => setSaveMessage(""),
+          3000
+        );
       },
     });
   };
@@ -257,7 +301,13 @@ const ApplicationPage: React.FC = () => {
       if (field.showToClient) {
         const fieldKey = `${stepId}-${field.id}`;
         const value = formData[fieldKey] ?? field.fieldValue;
-        if (field.required && (value === undefined || value === null || value === "" || value === false)) {
+        if (
+          field.required &&
+          (value === undefined ||
+            value === null ||
+            value === "" ||
+            value === false)
+        ) {
           errors[fieldKey] = `${field.fieldName} is required.`;
         }
       }
@@ -277,9 +327,12 @@ const ApplicationPage: React.FC = () => {
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) {
       // Scroll to first error
-      const firstErrorElement = document.querySelector('.text-red-600');
+      const firstErrorElement = document.querySelector(".text-red-600");
       if (firstErrorElement) {
-        firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstErrorElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }
       return;
     }
@@ -322,7 +375,7 @@ const ApplicationPage: React.FC = () => {
           }
 
           // Navigate to next step if available, otherwise stay on current step
-          const nextStepIndex = steps.findIndex(s => s.id === stepId) + 1;
+          const nextStepIndex = steps.findIndex((s) => s.id === stepId) + 1;
           if (nextStepIndex < steps.length) {
             setSelectedStep(steps[nextStepIndex].id);
           } else {
@@ -364,8 +417,12 @@ const ApplicationPage: React.FC = () => {
             <div className="mx-auto mb-4 w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
               <XCircle className="w-8 h-8 text-red-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Application</h2>
-            <p className="text-gray-600 mb-4">We couldn't load the application details. Please try again.</p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Error Loading Application
+            </h2>
+            <p className="text-gray-600 mb-4">
+              We couldn&apos;t load the application details. Please try again.
+            </p>
             <Button onClick={() => window.location.reload()} variant="outline">
               Try Again
             </Button>
@@ -383,9 +440,16 @@ const ApplicationPage: React.FC = () => {
             <div className="mx-auto mb-4 w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
               <FileText className="w-8 h-8 text-gray-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Application Not Found</h2>
-            <p className="text-gray-600 mb-4">No application found for Case ID: {caseId}</p>
-            <Button onClick={() => router.push("/profile?selectedMenu=immigration")} variant="outline">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Application Not Found
+            </h2>
+            <p className="text-gray-600 mb-4">
+              No application found for Case ID: {caseId}
+            </p>
+            <Button
+              onClick={() => router.push("/profile?selectedMenu=immigration")}
+              variant="outline"
+            >
               Back to Applications
             </Button>
           </div>
@@ -459,29 +523,48 @@ const ApplicationPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="outline" onClick={handleBackToDashboard} className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          onClick={handleBackToDashboard}
+          className="flex items-center gap-2"
+        >
           <ArrowLeft size={16} /> Back to Dashboard
         </Button>
         <div className="h-6 w-px bg-gray-300" />
-        <h1 className="text-2xl font-bold text-gray-900">Application Details</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Application Details
+        </h1>
       </div>
 
       <Card className="mb-8">
         <CardHeader>
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <CardTitle className="text-xl font-bold">Case ID: {applicationData.application_number}</CardTitle>
-              <p className="text-gray-600 mt-1">{applicationData.service_type}</p>
+              <CardTitle className="text-xl font-bold">
+                Case ID: {applicationData.application_number}
+              </CardTitle>
+              <p className="text-gray-600 mt-1">
+                {applicationData.service_type}
+              </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge variant={getStatusBadgeVariant(applicationData.status)} className="text-sm px-3 py-1">
-                Current Stage: {(() => {
-                  const currentStage = applicationData.steps.find(step => step.stageOrder == applicationData.current_step);
-                  return currentStage ? currentStage.stageName :  `Step ${applicationData.current_step}`;
+              <Badge
+                variant={getStatusBadgeVariant(applicationData.status)}
+                className="text-sm px-3 py-1"
+              >
+                Current Stage:{" "}
+                {(() => {
+                  const currentStage = applicationData.steps.find(
+                    (step) => step.stageOrder == applicationData.current_step
+                  );
+                  return currentStage
+                    ? currentStage.stageName
+                    : `Step ${applicationData.current_step}`;
                 })()}
               </Badge>
               <div className="text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-full">
-                Current Step: ({applicationData.current_step} of {applicationData.steps.length})
+                Current Step: ({applicationData.current_step} of{" "}
+                {applicationData.steps.length})
               </div>
             </div>
           </div>
@@ -492,14 +575,18 @@ const ApplicationPage: React.FC = () => {
               <Calendar className="h-5 w-5 text-gray-500" />
               <div>
                 <p className="text-sm text-gray-500">Created At</p>
-                <p className="font-medium">{new Date(applicationData.created_at).toLocaleDateString()}</p>
+                <p className="font-medium">
+                  {new Date(applicationData.created_at).toLocaleDateString()}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <Calendar className="h-5 w-5 text-gray-500" />
               <div>
                 <p className="text-sm text-gray-500">Updated At</p>
-                <p className="font-medium">{new Date(applicationData.updated_at).toLocaleDateString()}</p>
+                <p className="font-medium">
+                  {new Date(applicationData.updated_at).toLocaleDateString()}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -508,9 +595,10 @@ const ApplicationPage: React.FC = () => {
                 <p className="text-sm text-gray-500">Estimated Completion</p>
                 <p className="font-medium">
                   {applicationData.estimated_completion
-                    ? new Date(applicationData.estimated_completion).toLocaleDateString()
-                    : "Not set"
-                  }
+                    ? new Date(
+                        applicationData.estimated_completion
+                      ).toLocaleDateString()
+                    : "Not set"}
                 </p>
               </div>
             </div>
@@ -526,14 +614,26 @@ const ApplicationPage: React.FC = () => {
             return (
               <div key={step.id} className="flex-1 text-center relative">
                 {index !== 0 && (
-                  <div className={`absolute top-4 left-0 w-full h-0.5 z-0 ${isCompleted ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <div
+                    className={`absolute top-4 left-0 w-full h-0.5 z-0 ${isCompleted ? "bg-green-500" : "bg-gray-300"}`}
+                  />
                 )}
-                <div className="relative z-10 flex items-center justify-center mx-auto w-8 h-8 rounded-full border-2"
+                <div
+                  className="relative z-10 flex items-center justify-center mx-auto w-8 h-8 rounded-full border-2"
                   style={{
-                    backgroundColor: isCompleted ? '#22c55e' : isActive ? '#3b82f6' : '#e5e7eb',
-                    color: isCompleted || isActive ? '#fff' : '#6b7280',
-                    borderColor: isCompleted ? '#22c55e' : isActive ? '#3b82f6' : '#e5e7eb'
-                  }}>
+                    backgroundColor: isCompleted
+                      ? "#22c55e"
+                      : isActive
+                        ? "#3b82f6"
+                        : "#e5e7eb",
+                    color: isCompleted || isActive ? "#fff" : "#6b7280",
+                    borderColor: isCompleted
+                      ? "#22c55e"
+                      : isActive
+                        ? "#3b82f6"
+                        : "#e5e7eb",
+                  }}
+                >
                   {isCompleted ? "✓" : index + 1}
                 </div>
                 <div className="mt-2 text-sm text-gray-700">{step.title}</div>
@@ -543,350 +643,469 @@ const ApplicationPage: React.FC = () => {
         </div>
         <p className="text-center mt-4 text-gray-500">
           {(() => {
-            const currentStage = steps.find(step => step.id === selectedStep);
-            return currentStage ? `${currentStage.title} (${selectedStep} of ${steps.length})` : `Step ${selectedStep} of ${steps.length}`;
+            const currentStage = steps.find((step) => step.id === selectedStep);
+            return currentStage
+              ? `${currentStage.title} (${selectedStep} of ${steps.length})`
+              : `Step ${selectedStep} of ${steps.length}`;
           })()}
         </p>
       </div>
 
       {/* Step Form Content */}
-      {steps.map((step, index) => (
-        selectedStep !== null && selectedStep === step.id && (
-          <div key={step.id} className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden animate-in slide-in-from-right-5 duration-300">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">{step.title}</h2>
-              <p className="text-sm text-gray-600">{step.description}</p>
-            </div>
-            <div className="p-6">
-
-            {/* Custom Fields */}
-            {step.customForm.map((form) => {
-              // Only show fields that should be visible to client or have existing values
-              if (!form.showToClient && !form.fieldValue) {
-                return null;
-              }
-
-              return (
-                <div key={form.id} className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {form.fieldName} {form.required && form.showToClient && <span className="text-red-500">*</span>}
-                  </label>
-                  {(() => {
-                    const fieldKey = `${step.id}-${form.id}`;
-                    const currentValue = formData[fieldKey] ?? form.fieldValue ?? "";
-
-                    // If field should not be shown to client but has a value, show as read-only
-                    if (!form.showToClient && form.fieldValue) {
-                      return (
-                        <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700">
-                          {form.fieldValue}
-                        </div>
-                      );
-                    }
-
-                    // Show editable fields for client
-                    if (form.showToClient) {
-                      switch (form.fieldType) {
-                        case "select":
-                          return (
-                            <>
-                              <select
-                                value={currentValue}
-                                onChange={(e) => handleFieldChange(step.id, form.id, e.target.value)}
-                                className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                              >
-                                <option value="">Select</option>
-                                {form.fieldOptions.map((option, i) => (
-                                  <option key={i} value={option}>{option}</option>
-                                ))}
-                              </select>
-                              {formErrors[`${step.id}-${form.id}`] && (
-                                <p className="text-sm text-red-600 mt-1">{formErrors[`${step.id}-${form.id}`]}</p>
-                              )}
-                            </>
-                          );
-                        case "textarea":
-                          return (
-                            <>
-                              <textarea
-                                value={currentValue}
-                                onChange={(e) => handleFieldChange(step.id, form.id, e.target.value)}
-                                className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                rows={4}
-                              />
-                              {formErrors[`${step.id}-${form.id}`] && (
-                                <p className="text-sm text-red-600 mt-1">{formErrors[`${step.id}-${form.id}`]}</p>
-                              )}
-                            </>
-                          );
-                        case "checkbox":
-                          return (
-                            <>
-                              <div className="mt-1">
-                                <label className="inline-flex items-center">
-                                  <input
-                                    type="checkbox"
-                                    checked={formData[fieldKey] ?? form.fieldValue === "true"}
-                                    onChange={(e) => handleFieldChange(step.id, form.id, e.target.checked)}
-                                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">Yes</span>
-                                </label>
-                              </div>
-                              {formErrors[`${step.id}-${form.id}`] && (
-                                <p className="text-sm text-red-600 mt-1">{formErrors[`${step.id}-${form.id}`]}</p>
-                              )}
-                            </>
-                          );
-                        case "radio":
-                          return (
-                            <div className="mt-1">
-                              {form.fieldOptions.map((option, i) => (
-                                <label key={i} className="inline-flex items-center mr-4">
-                                  <input
-                                    type="radio"
-                                    name={fieldKey}
-                                    value={option}
-                                    checked={(formData[fieldKey] ?? form.fieldValue) === option}
-                                    onChange={(e) => handleFieldChange(step.id, form.id, e.target.value)}
-                                    className="border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                                  />
-                                  <span className="ml-2 text-sm text-gray-700">{option}</span>
-                                </label>
-                              ))}
-                              {formErrors[`${step.id}-${form.id}`] && (
-                                <p className="text-sm text-red-600 mt-1">{formErrors[`${step.id}-${form.id}`]}</p>
-                              )}
-                            </div>
-                          );
-                        default:
-                          return (
-                            <>
-                              <Input
-                                type={form.fieldType || "text"}
-                                value={currentValue}
-                                onChange={(e) => handleFieldChange(step.id, form.id, e.target.value)}
-                                className="mt-1 block w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                              />
-                              {formErrors[`${step.id}-${form.id}`] && (
-                                <p className="text-sm text-red-600 mt-1">{formErrors[`${step.id}-${form.id}`]}</p>
-                              )}
-                            </>
-                          );
-                      }
-                    }
-
+      {steps.map(
+        (step, index) =>
+          selectedStep !== null &&
+          selectedStep === step.id && (
+            <div
+              key={step.id}
+              className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden animate-in slide-in-from-right-5 duration-300"
+            >
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                <h2 className="text-xl font-bold text-gray-900 mb-1">
+                  {step.title}
+                </h2>
+                <p className="text-sm text-gray-600">{step.description}</p>
+              </div>
+              <div className="p-6">
+                {/* Custom Fields */}
+                {step.customForm.map((form) => {
+                  // Only show fields that should be visible to client or have existing values
+                  if (!form.showToClient && !form.fieldValue) {
                     return null;
-                  })()}
-                </div>
-              );
-            })}
+                  }
 
+                  return (
+                    <div key={form.id} className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700">
+                        {form.fieldName}{" "}
+                        {form.required && form.showToClient && (
+                          <span className="text-red-500">*</span>
+                        )}
+                      </label>
+                      {(() => {
+                        const fieldKey = `${step.id}-${form.id}`;
+                        const currentValue =
+                          formData[fieldKey] ?? form.fieldValue ?? "";
 
-            {/* Documents */}
-            <div className="space-y-4">
-              {step.documents.map((doc) => {
-                const isApproved = doc.status === "Approved";
-                const hasExistingFile = doc.fileUrl && doc.fileUrl !== "";
-                const canUpload = !isApproved;
-                const isUploading = uploadingFiles[`${step.id}-${doc.id}`];
-
-                return (
-                  <div key={doc.id} className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:border-gray-300">
-                    <div className="p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-start gap-4">
-                        {/* Document Info Section */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <label className="block text-sm font-semibold text-gray-900 mb-2" title={doc.fileName}>
-                                {doc.fileName} {doc.required && <span className="text-red-500 ml-1">*</span>}
-                              </label>
-                              <p className="text-sm text-gray-600 leading-relaxed mb-3" title={doc.requestReason}>
-                                {doc.requestReason}
-                              </p>
+                        // If field should not be shown to client but has a value, show as read-only
+                        if (!form.showToClient && form.fieldValue) {
+                          return (
+                            <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700">
+                              {form.fieldValue}
                             </div>
-                            <div className="flex items-center gap-2 ml-4">
-                              {statusIcon(doc.status)}
-                            </div>
-                          </div>
+                          );
+                        }
 
-                          {/* Status Badge */}
-                          <div className="mb-4">
-                            <Badge
-                              variant={
-                                doc.status === "Approved" ? "default" :
-                                doc.status === "Completed" ? "secondary" :
-                                doc.status === "Rejected" ? "destructive" :
-                                doc.status === "Additional_Info_Required" ? "destructive" :
-                                "outline"
-                              }
-                              className="text-sm px-3 py-1 font-medium"
-                            >
-                              {formatStatusText(doc.status)}
-                            </Badge>
-                          </div>
-
-                          {/* Existing File Display */}
-                          {hasExistingFile && (
-                            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <CheckCircle size={16} className="text-green-600" />
-                                  <span className="text-sm text-green-800 font-medium">File Uploaded</span>
-                                </div>
-                                <a
-                                  href={`https://dilktbooxkxthvqspxge.supabase.co/storage/v1/object/public/${doc.fileUrl}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2 transition-colors hover:underline"
-                                >
-                                  <Eye size={16} />
-                                  View Document
-                                </a>
-                              </div>
-                              {isApproved && (
-                                <p className="text-sm text-green-700 mt-2 flex items-center gap-1">
-                                  <CheckCircle size={14} />
-                                  Approved - cannot be changed
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Upload Section */}
-                        <div className="lg:w-80 lg:flex-shrink-0">
-                          {canUpload && (
-                            <div
-                              onDragOver={(e) => handleDragOver(e)}
-                              onDragLeave={handleDragLeave}
-                              onDrop={(e) => handleDrop(e, step.id, doc.id, doc.fileName)}
-                              className={`border-2 border-dashed rounded-xl p-6 transition-all duration-300 ${
-                                isUploading ? "border-blue-400 bg-blue-50 animate-pulse" :
-                                dragOver ? "border-blue-400 bg-blue-50" :
-                                "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100"
-                              } ${hasExistingFile ? "border-orange-300 bg-orange-50" : ""}`}
-                            >
-                              <div className="text-center">
-                                <div className="mb-4">
-                                  {isUploading ? (
-                                    <div className="mx-auto h-8 w-8 animate-spin rounded-full border-3 border-blue-500 border-t-transparent"></div>
-                                  ) : (
-                                    <FileText className="mx-auto h-8 w-8 text-gray-400" />
+                        // Show editable fields for client
+                        if (form.showToClient) {
+                          switch (form.fieldType) {
+                            case "select":
+                              return (
+                                <>
+                                  <select
+                                    value={currentValue}
+                                    onChange={(e) =>
+                                      handleFieldChange(
+                                        step.id,
+                                        form.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                  >
+                                    <option value="">Select</option>
+                                    {form.fieldOptions.map((option, i) => (
+                                      <option key={i} value={option}>
+                                        {option}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  {formErrors[`${step.id}-${form.id}`] && (
+                                    <p className="text-sm text-red-600 mt-1">
+                                      {formErrors[`${step.id}-${form.id}`]}
+                                    </p>
+                                  )}
+                                </>
+                              );
+                            case "textarea":
+                              return (
+                                <>
+                                  <textarea
+                                    value={currentValue}
+                                    onChange={(e) =>
+                                      handleFieldChange(
+                                        step.id,
+                                        form.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                    rows={4}
+                                  />
+                                  {formErrors[`${step.id}-${form.id}`] && (
+                                    <p className="text-sm text-red-600 mt-1">
+                                      {formErrors[`${step.id}-${form.id}`]}
+                                    </p>
+                                  )}
+                                </>
+                              );
+                            case "checkbox":
+                              return (
+                                <>
+                                  <div className="mt-1">
+                                    <label className="inline-flex items-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={
+                                          formData[fieldKey] ??
+                                          form.fieldValue === "true"
+                                        }
+                                        onChange={(e) =>
+                                          handleFieldChange(
+                                            step.id,
+                                            form.id,
+                                            e.target.checked
+                                          )
+                                        }
+                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                      />
+                                      <span className="ml-2 text-sm text-gray-700">
+                                        Yes
+                                      </span>
+                                    </label>
+                                  </div>
+                                  {formErrors[`${step.id}-${form.id}`] && (
+                                    <p className="text-sm text-red-600 mt-1">
+                                      {formErrors[`${step.id}-${form.id}`]}
+                                    </p>
+                                  )}
+                                </>
+                              );
+                            case "radio":
+                              return (
+                                <div className="mt-1">
+                                  {form.fieldOptions.map((option, i) => (
+                                    <label
+                                      key={i}
+                                      className="inline-flex items-center mr-4"
+                                    >
+                                      <input
+                                        type="radio"
+                                        name={fieldKey}
+                                        value={option}
+                                        checked={
+                                          (formData[fieldKey] ??
+                                            form.fieldValue) === option
+                                        }
+                                        onChange={(e) =>
+                                          handleFieldChange(
+                                            step.id,
+                                            form.id,
+                                            e.target.value
+                                          )
+                                        }
+                                        className="border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                      />
+                                      <span className="ml-2 text-sm text-gray-700">
+                                        {option}
+                                      </span>
+                                    </label>
+                                  ))}
+                                  {formErrors[`${step.id}-${form.id}`] && (
+                                    <p className="text-sm text-red-600 mt-1">
+                                      {formErrors[`${step.id}-${form.id}`]}
+                                    </p>
                                   )}
                                 </div>
-                                <p className="text-sm text-gray-700 mb-4 font-medium">
-                                  {isUploading ? "Uploading..." :
-                                   dragOver ? "Release to drop file" :
-                                   hasExistingFile ? "Replace existing file" :
-                                   "Drop file here or click to browse"}
-                                </p>
-                                <Input
-                                  type="file"
-                                  onChange={(e) => handleFileChange(step.id, doc.id, doc.fileName, e)}
-                                  className="hidden"
-                                  id={`file-input-${step.id}-${doc.id}`}
-                                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                  disabled={isUploading}
-                                />
-                                <label
-                                  htmlFor={`file-input-${step.id}-${doc.id}`}
-                                  className={`inline-flex items-center px-4 py-2 border shadow-sm text-sm font-medium rounded-lg transition-all duration-200 ${
-                                    isUploading
-                                      ? "border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed"
-                                      : "border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 cursor-pointer hover:shadow-md"
-                                  }`}
+                              );
+                            default:
+                              return (
+                                <>
+                                  <Input
+                                    type={form.fieldType || "text"}
+                                    value={currentValue}
+                                    onChange={(e) =>
+                                      handleFieldChange(
+                                        step.id,
+                                        form.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    className="mt-1 block w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                  />
+                                  {formErrors[`${step.id}-${form.id}`] && (
+                                    <p className="text-sm text-red-600 mt-1">
+                                      {formErrors[`${step.id}-${form.id}`]}
+                                    </p>
+                                  )}
+                                </>
+                              );
+                          }
+                        }
+
+                        return null;
+                      })()}
+                    </div>
+                  );
+                })}
+
+                {/* Documents */}
+                <div className="space-y-4">
+                  {step.documents.map((doc) => {
+                    const isApproved = doc.status === "Approved";
+                    const hasExistingFile = doc.fileUrl && doc.fileUrl !== "";
+                    const canUpload = !isApproved;
+                    const isUploading = uploadingFiles[`${step.id}-${doc.id}`];
+
+                    return (
+                      <div
+                        key={doc.id}
+                        className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:border-gray-300"
+                      >
+                        <div className="p-6">
+                          <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                            {/* Document Info Section */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <label
+                                    className="block text-sm font-semibold text-gray-900 mb-2"
+                                    title={doc.fileName}
+                                  >
+                                    {doc.fileName}{" "}
+                                    {doc.required && (
+                                      <span className="text-red-500 ml-1">
+                                        *
+                                      </span>
+                                    )}
+                                  </label>
+                                  <p
+                                    className="text-sm text-gray-600 leading-relaxed mb-3"
+                                    title={doc.requestReason}
+                                  >
+                                    {doc.requestReason}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2 ml-4">
+                                  {statusIcon(doc.status)}
+                                </div>
+                              </div>
+
+                              {/* Status Badge */}
+                              <div className="mb-4">
+                                <Badge
+                                  variant={
+                                    doc.status === "Approved"
+                                      ? "default"
+                                      : doc.status === "Completed"
+                                        ? "secondary"
+                                        : doc.status === "Rejected"
+                                          ? "destructive"
+                                          : doc.status ===
+                                              "Additional_Info_Required"
+                                            ? "destructive"
+                                            : "outline"
+                                  }
+                                  className="text-sm px-3 py-1 font-medium"
                                 >
-                                  {isUploading ? "Uploading..." : hasExistingFile ? "Replace File" : "Choose File"}
-                                </label>
-                                <p className="text-xs text-gray-500 mt-3">
-                                  PDF, JPG, PNG, DOC (25MB max)
+                                  {formatStatusText(doc.status)}
+                                </Badge>
+                              </div>
+
+                              {/* Existing File Display */}
+                              {hasExistingFile && (
+                                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <CheckCircle
+                                        size={16}
+                                        className="text-green-600"
+                                      />
+                                      <span className="text-sm text-green-800 font-medium">
+                                        File Uploaded
+                                      </span>
+                                    </div>
+                                    <a
+                                      href={`https://dilktbooxkxthvqspxge.supabase.co/storage/v1/object/public/${doc.fileUrl}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2 transition-colors hover:underline"
+                                    >
+                                      <Eye size={16} />
+                                      View Document
+                                    </a>
+                                  </div>
+                                  {isApproved && (
+                                    <p className="text-sm text-green-700 mt-2 flex items-center gap-1">
+                                      <CheckCircle size={14} />
+                                      Approved - cannot be changed
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Upload Section */}
+                            <div className="lg:w-80 lg:flex-shrink-0">
+                              {canUpload && (
+                                <div
+                                  onDragOver={(e) => handleDragOver(e)}
+                                  onDragLeave={handleDragLeave}
+                                  onDrop={(e) =>
+                                    handleDrop(e, step.id, doc.id, doc.fileName)
+                                  }
+                                  className={`border-2 border-dashed rounded-xl p-6 transition-all duration-300 ${
+                                    isUploading
+                                      ? "border-blue-400 bg-blue-50 animate-pulse"
+                                      : dragOver
+                                        ? "border-blue-400 bg-blue-50"
+                                        : "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100"
+                                  } ${hasExistingFile ? "border-orange-300 bg-orange-50" : ""}`}
+                                >
+                                  <div className="text-center">
+                                    <div className="mb-4">
+                                      {isUploading ? (
+                                        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-3 border-blue-500 border-t-transparent"></div>
+                                      ) : (
+                                        <FileText className="mx-auto h-8 w-8 text-gray-400" />
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-gray-700 mb-4 font-medium">
+                                      {isUploading
+                                        ? "Uploading..."
+                                        : dragOver
+                                          ? "Release to drop file"
+                                          : hasExistingFile
+                                            ? "Replace existing file"
+                                            : "Drop file here or click to browse"}
+                                    </p>
+                                    <Input
+                                      type="file"
+                                      onChange={(e) =>
+                                        handleFileChange(
+                                          step.id,
+                                          doc.id,
+                                          doc.fileName,
+                                          e
+                                        )
+                                      }
+                                      className="hidden"
+                                      id={`file-input-${step.id}-${doc.id}`}
+                                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                      disabled={isUploading}
+                                    />
+                                    <label
+                                      htmlFor={`file-input-${step.id}-${doc.id}`}
+                                      className={`inline-flex items-center px-4 py-2 border shadow-sm text-sm font-medium rounded-lg transition-all duration-200 ${
+                                        isUploading
+                                          ? "border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed"
+                                          : "border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 cursor-pointer hover:shadow-md"
+                                      }`}
+                                    >
+                                      {isUploading
+                                        ? "Uploading..."
+                                        : hasExistingFile
+                                          ? "Replace File"
+                                          : "Choose File"}
+                                    </label>
+                                    <p className="text-xs text-gray-500 mt-3">
+                                      PDF, JPG, PNG, DOC (25MB max)
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Error and Success Messages */}
+                          <div className="mt-4">
+                            {/* Error Messages */}
+                            {formErrors[`${step.id}-${doc.id}`] && (
+                              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-sm text-red-700 font-medium">
+                                  {formErrors[`${step.id}-${doc.id}`]}
                                 </p>
                               </div>
-                            </div>
-                          )}
+                            )}
+
+                            {/* Success Messages */}
+                            {uploadedFiles[`${step.id}-${doc.id}`]?.name && (
+                              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <p className="text-sm text-green-700 flex items-center gap-2 font-medium">
+                                  <CheckCircle size={16} />
+                                  Successfully uploaded:{" "}
+                                  {uploadedFiles[
+                                    `${step.id}-${doc.id}`
+                                  ].name.substring(0, 30)}
+                                  ...
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         </div>
-
                       </div>
+                    );
+                  })}
+                </div>
 
-                      {/* Error and Success Messages */}
-                      <div className="mt-4">
-                        {/* Error Messages */}
-                        {formErrors[`${step.id}-${doc.id}`] && (
-                          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-sm text-red-700 font-medium">{formErrors[`${step.id}-${doc.id}`]}</p>
-                          </div>
-                        )}
-
-                        {/* Success Messages */}
-                        {uploadedFiles[`${step.id}-${doc.id}`]?.name && (
-                          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <p className="text-sm text-green-700 flex items-center gap-2 font-medium">
-                              <CheckCircle size={16} />
-                              Successfully uploaded: {uploadedFiles[`${step.id}-${doc.id}`].name.substring(0, 30)}...
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                {/* Save Form Button - Positioned in bottom-right (hidden for document upload steps) */}
+                {!step.documentsRequired && (
+                  <div className="flex justify-end mb-4">
+                    <Button
+                      onClick={() => handleSaveForm(step.id)}
+                      disabled={isSaving}
+                      className="bg-black hover:bg-gray-800 text-white px-4 py-2 transition-all duration-200 hover:scale-105 shadow-md"
+                    >
+                      {isSaving ? "Saving..." : "Save Form"}
+                    </Button>
                   </div>
-                );
-              })}
-            </div>
+                )}
 
-            {/* Save Form Button - Positioned in bottom-right (hidden for document upload steps) */}
-            {!step.documentsRequired && (
-              <div className="flex justify-end mb-4">
-                <Button
-                  onClick={() => handleSaveForm(step.id)}
-                  disabled={isSaving}
-                  className="bg-black hover:bg-gray-800 text-white px-4 py-2 transition-all duration-200 hover:scale-105 shadow-md"
-                >
-                  {isSaving ? "Saving..." : "Save Form"}
-                </Button>
-              </div>
-            )}
+                {/* Save Message */}
+                {saveMessage && (
+                  <div
+                    className={`mb-4 p-2 rounded-md text-sm ${
+                      saveMessage.includes("successfully")
+                        ? "bg-green-50 text-green-700 border border-green-200"
+                        : "bg-red-50 text-red-700 border border-red-200"
+                    }`}
+                  >
+                    {saveMessage}
+                  </div>
+                )}
 
-            {/* Save Message */}
-            {saveMessage && (
-              <div className={`mb-4 p-2 rounded-md text-sm ${
-                saveMessage.includes("successfully")
-                  ? "bg-green-50 text-green-700 border border-green-200"
-                  : "bg-red-50 text-red-700 border border-red-200"
-              }`}>
-                {saveMessage}
-              </div>
-            )}
-
-            {/* Navigation Buttons */}
-            <div className="mt-8 flex justify-between items-center bg-gray-50 px-6 py-4 rounded-lg">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const prev = steps[index - 1];
-                  if (prev) setSelectedStep(prev.id);
-                }}
-                disabled={index === 0}
-                className="flex items-center gap-2 px-6 py-2 transition-all duration-200 hover:scale-105"
-              >
-                <ArrowLeft size={16} />
-                Previous Stage
-              </Button>
-              <div className="flex gap-3">
-                <Button
-                  onClick={() => handleFormSubmit(step.id)}
-                  disabled={isSubmitting}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 transition-all duration-200 hover:scale-105 shadow-lg"
-                >
-                  {isSubmitting ? "Submitting..." : (index === steps.length - 1 ? "Submit Application" : "Next Stage")}
-                </Button>
+                {/* Navigation Buttons */}
+                <div className="mt-8 flex justify-between items-center bg-gray-50 px-6 py-4 rounded-lg">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const prev = steps[index - 1];
+                      if (prev) setSelectedStep(prev.id);
+                    }}
+                    disabled={index === 0}
+                    className="flex items-center gap-2 px-6 py-2 transition-all duration-200 hover:scale-105"
+                  >
+                    <ArrowLeft size={16} />
+                    Previous Stage
+                  </Button>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => handleFormSubmit(step.id)}
+                      disabled={isSubmitting}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 transition-all duration-200 hover:scale-105 shadow-lg"
+                    >
+                      {isSubmitting
+                        ? "Submitting..."
+                        : index === steps.length - 1
+                          ? "Submit Application"
+                          : "Next Stage"}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
-            </div>
-          </div>
-        )
-      ))}
+          )
+      )}
     </div>
   );
 };

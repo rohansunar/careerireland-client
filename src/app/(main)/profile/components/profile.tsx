@@ -13,7 +13,6 @@ import {
 import Setting from "./setting";
 
 const Profile = ({ user }: { user: IProfile }) => {
-
   return (
     <>
       <Card className="max-w-md mx-auto rounded-xl shadow-lg border border-gray-200">
@@ -54,8 +53,6 @@ const Profile = ({ user }: { user: IProfile }) => {
           </DropdownMenu>
         </CardContent>
       </Card>
-
-
     </>
   );
 };

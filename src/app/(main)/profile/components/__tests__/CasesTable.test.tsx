@@ -100,14 +100,18 @@ describe("CasesTable", () => {
   it("renders view buttons for each case", () => {
     render(<CasesTable {...defaultProps} />);
 
-    const viewButtons = screen.getAllByRole("button", { name: /view details/i });
+    const viewButtons = screen.getAllByRole("button", {
+      name: /view details/i,
+    });
     expect(viewButtons).toHaveLength(mockCases.length);
   });
 
   it("navigates to case details when view button is clicked", () => {
     render(<CasesTable {...defaultProps} />);
 
-    const firstViewButton = screen.getAllByRole("button", { name: /view details/i })[0];
+    const firstViewButton = screen.getAllByRole("button", {
+      name: /view details/i,
+    })[0];
     fireEvent.click(firstViewButton);
 
     expect(mockPush).toHaveBeenCalledWith("/profile/application/C001");
@@ -184,7 +188,9 @@ describe("CasesTable", () => {
   it("handles case navigation for all cases", () => {
     render(<CasesTable {...defaultProps} />);
 
-    const viewButtons = screen.getAllByRole("button", { name: /view details/i });
+    const viewButtons = screen.getAllByRole("button", {
+      name: /view details/i,
+    });
 
     // Test navigation for each case
     viewButtons.forEach((button, index) => {

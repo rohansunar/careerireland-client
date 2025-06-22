@@ -34,7 +34,6 @@ const Setting = ({ user }: { user: IProfile }) => {
           Logout
         </div>
       </DropdownMenuItem>
-
     </DropdownMenuContent>
   );
 };
