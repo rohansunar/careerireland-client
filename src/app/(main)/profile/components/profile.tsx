@@ -11,10 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Setting from "./setting";
-import DeleteAccount from "./delete-account";
 
 const Profile = ({ user }: { user: IProfile }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
 
   return (
     <>
@@ -52,12 +50,12 @@ const Profile = ({ user }: { user: IProfile }) => {
                 Account Settings
               </Button>
             </DropdownMenuTrigger>
-            <Setting user={user} setIsOpen={setIsOpen} />
+            <Setting user={user} />
           </DropdownMenu>
         </CardContent>
       </Card>
 
-      <DeleteAccount setIsOpen={setIsOpen} isOpen={isOpen} />
+
     </>
   );
 };

@@ -721,7 +721,7 @@ export interface StepFormData {
 export interface SubmissionPayload {
   applicationId: string;
   formData: StepFormData[];
-  currentStep: string;
+  currentStep?: string; // Optional - only used for step progression, not for saving
 }
 
 export const useSubmitApplicationStep = () => {
@@ -733,12 +733,16 @@ export const useSubmitApplicationStep = () => {
       formData,
       currentStep,
     }: SubmissionPayload) => {
+      const requestBody: any = { formData };
+
+      // Only include currentStep if it's provided (for step progression)
+      if (currentStep !== undefined) {
+        requestBody.currentStep = currentStep;
+      }
+
       const res = await axios.put(
         `${apiUrl}/applications/${applicationId}`,
-        {
-          formData,
-          currentStep,
-        },
+        requestBody,
         {
           headers: {
             Authorization: `Bearer ${session?.backendTokens.accessToken}`,

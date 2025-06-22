@@ -5,15 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 import {
-  Upload,
   FileText,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertTriangle,
   Download,
   Eye,
-  Trash2,
   Calendar,
   Shield,
   FolderOpen,
@@ -48,161 +42,65 @@ type DocumentType =
   | "Photo"
   | "Address Proof";
 
-type DocumentStatus = "Pending" | "Approved" | "Rejected" | "Expired";
 
-type DocumentPriority = "Critical" | "High" | "Medium" | "Low";
 
 interface UploadedDoc {
   id: string;
   category: DocumentCategory;
   type: DocumentType;
   name: string;
-  status: DocumentStatus;
-  priority: DocumentPriority;
   uploadedAt: Date;
   expiryDate?: Date;
   fileSize: string;
-  version: number;
-  rejectionReason?: string;
-  isRequired: boolean;
 }
 
-// Enhanced sample documents with comprehensive data
+// Sample documents with essential data
 const staticUploadedDocs: UploadedDoc[] = [
   {
     id: "s1",
     category: "Identity Documents",
     type: "Passport",
     name: "passport_scan.pdf",
-    status: "Approved",
-    priority: "Critical",
     uploadedAt: new Date("2025-05-01T10:30:00"),
     expiryDate: new Date("2030-05-01"),
     fileSize: "2.4 MB",
-    version: 1,
-    isRequired: true
   },
   {
     id: "s2",
     category: "Identity Documents",
     type: "Photo",
     name: "profile_photo.jpg",
-    status: "Pending",
-    priority: "High",
     uploadedAt: new Date("2025-05-02T15:45:00"),
     fileSize: "1.2 MB",
-    version: 1,
-    isRequired: true
   },
   {
     id: "s3",
     category: "Educational Documents",
     type: "Degree",
     name: "degree_certificate.pdf",
-    status: "Rejected",
-    priority: "High",
     uploadedAt: new Date("2025-04-28T08:20:00"),
     fileSize: "3.1 MB",
-    version: 2,
-    rejectionReason: "Document quality too low, please upload a clearer scan",
-    isRequired: true
   },
   {
     id: "s4",
     category: "Identity Documents",
     type: "Address Proof",
     name: "utility_bill.jpg",
-    status: "Pending",
-    priority: "Medium",
     uploadedAt: new Date("2025-05-03T12:00:00"),
     fileSize: "1.8 MB",
-    version: 1,
-    isRequired: true
   },
   {
     id: "s5",
     category: "Financial Documents",
     type: "Bank Statement",
     name: "bank_statement_march.pdf",
-    status: "Approved",
-    priority: "High",
     uploadedAt: new Date("2025-04-15T09:15:00"),
     fileSize: "856 KB",
-    version: 1,
-    isRequired: true
   },
-  {
-    id: "s6",
-    category: "Employment Documents",
-    type: "Employment Letter",
-    name: "employment_letter.pdf",
-    status: "Expired",
-    priority: "Critical",
-    uploadedAt: new Date("2025-03-10T14:20:00"),
-    expiryDate: new Date("2025-05-01"),
-    fileSize: "445 KB",
-    version: 1,
-    isRequired: true
-  },
-  {
-    id: "s7",
-    category: "Immigration Documents",
-    type: "Previous Visa",
-    name: "previous_visa_stamp.jpg",
-    status: "Approved",
-    priority: "Medium",
-    uploadedAt: new Date("2025-04-20T11:30:00"),
-    fileSize: "2.1 MB",
-    version: 1,
-    isRequired: false
-  }
 ];
 
 // Helper functions for styling and categorization
-const getStatusBadgeClass = (status: DocumentStatus) => {
-  switch (status) {
-    case "Approved":
-      return "bg-green-100 text-green-800 border-green-200";
-    case "Pending":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    case "Rejected":
-      return "bg-red-100 text-red-800 border-red-200";
-    case "Expired":
-      return "bg-orange-100 text-orange-800 border-orange-200";
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
-  }
-};
 
-const getStatusIcon = (status: DocumentStatus) => {
-  switch (status) {
-    case "Approved":
-      return <CheckCircle className="w-4 h-4" />;
-    case "Pending":
-      return <Clock className="w-4 h-4" />;
-    case "Rejected":
-      return <XCircle className="w-4 h-4" />;
-    case "Expired":
-      return <AlertTriangle className="w-4 h-4" />;
-    default:
-      return <FileText className="w-4 h-4" />;
-  }
-};
-
-const getPriorityBadgeClass = (priority: DocumentPriority) => {
-  switch (priority) {
-    case "Critical":
-      return "bg-red-100 text-red-800 border-red-200";
-    case "High":
-      return "bg-orange-100 text-orange-800 border-orange-200";
-    case "Medium":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    case "Low":
-      return "bg-blue-100 text-blue-800 border-blue-200";
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
-  }
-};
 
 const getCategoryIcon = (category: DocumentCategory) => {
   switch (category) {
@@ -225,26 +123,16 @@ const DocumentVault: React.FC = () => {
   const [uploadedDocs] = useState<UploadedDoc[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | "All">("All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState<DocumentStatus | "All">("All");
 
   const allDocs = [...staticUploadedDocs, ...uploadedDocs];
 
-  // Filter documents based on category, status, and search term
+  // Filter documents based on category and search term
   const filteredDocs = allDocs.filter(doc => {
     const matchesCategory = selectedCategory === "All" || doc.category === selectedCategory;
-    const matchesStatus = selectedStatus === "All" || doc.status === selectedStatus;
     const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          doc.type.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesStatus && matchesSearch;
+    return matchesCategory && matchesSearch;
   });
-
-  // Calculate statistics
-  const totalDocs = allDocs.length;
-  const approvedDocs = allDocs.filter(doc => doc.status === "Approved").length;
-  const pendingDocs = allDocs.filter(doc => doc.status === "Pending").length;
-  const rejectedDocs = allDocs.filter(doc => doc.status === "Rejected").length;
-  const expiredDocs = allDocs.filter(doc => doc.status === "Expired").length;
-  const criticalDocs = allDocs.filter(doc => doc.priority === "Critical").length;
 
   const categories: (DocumentCategory | "All")[] = [
     "All",
@@ -254,8 +142,6 @@ const DocumentVault: React.FC = () => {
     "Educational Documents",
     "Immigration Documents"
   ];
-
-  const statuses: (DocumentStatus | "All")[] = ["All", "Pending", "Approved", "Rejected", "Expired"];
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -276,75 +162,9 @@ const DocumentVault: React.FC = () => {
         </div>
       </div>
 
-      {/* Statistics Dashboard */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-        <div className="bg-white p-4 rounded-lg border shadow-sm">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-600" />
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{totalDocs}</p>
-              <p className="text-xs text-gray-500">Total Documents</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border shadow-sm">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            <div>
-              <p className="text-2xl font-bold text-green-700">{approvedDocs}</p>
-              <p className="text-xs text-gray-500">Approved</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border shadow-sm">
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-yellow-600" />
-            <div>
-              <p className="text-2xl font-bold text-yellow-700">{pendingDocs}</p>
-              <p className="text-xs text-gray-500">Pending</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border shadow-sm">
-          <div className="flex items-center gap-2">
-            <XCircle className="w-5 h-5 text-red-600" />
-            <div>
-              <p className="text-2xl font-bold text-red-700">{rejectedDocs}</p>
-              <p className="text-xs text-gray-500">Rejected</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border shadow-sm">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-orange-600" />
-            <div>
-              <p className="text-2xl font-bold text-orange-700">{expiredDocs}</p>
-              <p className="text-xs text-gray-500">Expired</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border shadow-sm">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-600" />
-            <div>
-              <p className="text-2xl font-bold text-red-700">{criticalDocs}</p>
-              <p className="text-xs text-gray-500">Critical</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Upload Area */}
-      <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 text-center hover:border-blue-400 transition-colors">
-        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Documents</h3>
-        <p className="text-gray-600 mb-4">Drag and drop files here or click to browse</p>
-        <Button className="mb-2">
-          <Upload className="w-4 h-4 mr-2" />
-          Choose Files
-        </Button>
-        <p className="text-xs text-gray-500">Supported formats: PDF, JPG, PNG (Max 10MB)</p>
-      </div>
+
+
 
       {/* Filters and Search */}
       <div className="bg-white rounded-lg border p-6">
@@ -374,26 +194,15 @@ const DocumentVault: React.FC = () => {
               ))}
             </select>
 
-            {/* Status Filter */}
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value as DocumentStatus | "All")}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              aria-label="Filter documents by status"
-            >
-              {statuses.map(status => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
+
           </div>
         </div>
 
         {/* Results Summary */}
         <div className="mb-4">
           <p className="text-sm text-gray-600">
-            Showing {filteredDocs.length} of {totalDocs} documents
+            Showing {filteredDocs.length} of {allDocs.length} documents
             {selectedCategory !== "All" && ` in ${selectedCategory}`}
-            {selectedStatus !== "All" && ` with status ${selectedStatus}`}
             {searchTerm && ` matching "${searchTerm}"`}
           </p>
         </div>
@@ -404,9 +213,9 @@ const DocumentVault: React.FC = () => {
             <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
             <p className="text-gray-500">
-              {searchTerm || selectedCategory !== "All" || selectedStatus !== "All"
+              {searchTerm || selectedCategory !== "All"
                 ? "Try adjusting your filters or search terms"
-                : "Upload your first document to get started"
+                : "No documents available"
               }
             </p>
           </div>
@@ -421,9 +230,7 @@ const DocumentVault: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Category & Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status & Priority
-                  </th>
+
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Details
                   </th>
@@ -439,17 +246,12 @@ const DocumentVault: React.FC = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0">
-                          {getStatusIcon(doc.status)}
+                          <FileText className="w-4 h-4 text-gray-400" />
                         </div>
                         <div>
                           <div className="text-sm font-medium text-gray-900">{doc.name}</div>
                           <div className="text-sm text-gray-500">
-                            {doc.fileSize} • v{doc.version}
-                            {doc.isRequired && (
-                              <Badge variant="outline" className="ml-2 text-xs bg-blue-50 text-blue-700 border-blue-200">
-                                Required
-                              </Badge>
-                            )}
+                            {doc.fileSize}
                           </div>
                         </div>
                       </div>
@@ -466,29 +268,7 @@ const DocumentVault: React.FC = () => {
                       </div>
                     </td>
 
-                    {/* Status & Priority */}
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-2">
-                        <Badge
-                          variant="outline"
-                          className={`w-fit text-xs flex items-center gap-1 ${getStatusBadgeClass(doc.status)}`}
-                        >
-                          {getStatusIcon(doc.status)}
-                          {doc.status}
-                        </Badge>
-                        <Badge
-                          variant="outline"
-                          className={`w-fit text-xs ${getPriorityBadgeClass(doc.priority)}`}
-                        >
-                          {doc.priority}
-                        </Badge>
-                        {doc.status === "Rejected" && doc.rejectionReason && (
-                          <div className="text-xs text-red-600 mt-1 max-w-xs">
-                            {doc.rejectionReason}
-                          </div>
-                        )}
-                      </div>
-                    </td>
+
 
                     {/* Details */}
                     <td className="px-6 py-4">
@@ -497,17 +277,6 @@ const DocumentVault: React.FC = () => {
                           <Calendar className="w-3 h-3 text-gray-400" />
                           <span className="text-gray-500">Uploaded:</span> {doc.uploadedAt.toLocaleDateString()}
                         </div>
-                        {doc.expiryDate && (
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-gray-400" />
-                            <span className="text-gray-500">Expires:</span> {doc.expiryDate.toLocaleDateString()}
-                            {doc.expiryDate < new Date() && (
-                              <Badge variant="outline" className="ml-1 text-xs bg-red-50 text-red-700 border-red-200">
-                                Expired
-                              </Badge>
-                            )}
-                          </div>
-                        )}
                       </div>
                     </td>
 
@@ -522,10 +291,7 @@ const DocumentVault: React.FC = () => {
                           <Download className="w-3 h-3" />
                           Download
                         </Button>
-                        <Button variant="outline" size="sm" className="flex items-center gap-1 text-red-600 hover:text-red-700">
-                          <Trash2 className="w-3 h-3" />
-                          Delete
-                        </Button>
+
                       </div>
                     </td>
                   </tr>

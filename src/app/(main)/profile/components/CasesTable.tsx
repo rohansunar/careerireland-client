@@ -14,6 +14,7 @@ interface Case {
   current_step?: string;
   created_at: string;
   updated_at: string;
+  service_name: string,
   user: {
     name: string;
     email: string;
@@ -94,8 +95,9 @@ const CasesTable: React.FC<CasesTableProps> = ({
         <thead className="bg-gray-50">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Application</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Step</th>
+            {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th> */}
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Package</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stage</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timeline</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
           </tr>
@@ -110,6 +112,18 @@ const CasesTable: React.FC<CasesTableProps> = ({
               </td>
 
               <td className="px-6 py-4">
+                {c.service_name && (
+                  <Badge
+                    variant="outline"
+                    className={`w-fit text-xs flex items-center gap-1 ${getStatusBadgeClass(c.service_name)}`}
+                  >
+                    {getStatusIcon(c.service_name)}
+                    {c.service_name}
+                  </Badge>
+                )}
+              </td>
+
+              {/* <td className="px-6 py-4">
                 {c.status && (
                   <Badge
                     variant="outline"
@@ -119,11 +133,11 @@ const CasesTable: React.FC<CasesTableProps> = ({
                     {c.status}
                   </Badge>
                 )}
-              </td>
+              </td> */}
 
               <td className="px-6 py-4">
                 {c.current_step && (
-                  <span className="text-sm text-gray-700 font-medium">Step {c.current_step}</span>
+                  <span className="text-sm text-gray-700 font-medium">Stage {c.current_step}</span>
                 )}
               </td>
 

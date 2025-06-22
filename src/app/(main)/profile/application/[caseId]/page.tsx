@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Clock, CheckCircle, XCircle, FileText, Eye, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,7 @@ interface ApplicationData {
   };
   created_at: string;
   updated_at: string;
+  estimated_completion?: string;
 }
 
 const ApplicationPage: React.FC = () => {
@@ -88,6 +89,15 @@ const ApplicationPage: React.FC = () => {
       setSelectedStep(Number(data.current_step));
     }
   }, [data]);
+
+  // Cleanup timeout on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (saveMessageTimeoutRef.current) {
+        clearTimeout(saveMessageTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const allowedTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png", "application/msword"];
   const maxSize = 25 * 1024 * 1024; // 25MB
@@ -184,6 +194,9 @@ const ApplicationPage: React.FC = () => {
   const [saveMessage, setSaveMessage] = useState<string>("");
   const { mutate: submitStep } = useSubmitApplicationStep();
 
+  // Ref to track timeout for cleanup
+  const saveMessageTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleSaveForm = (stepId: number) => {
     const step = steps.find((s) => s.id === stepId);
     if (!step) return;
@@ -202,7 +215,7 @@ const ApplicationPage: React.FC = () => {
     const payload: SubmissionPayload = {
       applicationId: applicationData.id,
       formData: formDataArray,
-      currentStep: String(applicationData.current_step), // Keep current step the same for save
+      // Removed currentStep field - stage progression handled by backend only
     };
 
     setIsSaving(true);
@@ -212,14 +225,23 @@ const ApplicationPage: React.FC = () => {
       onSuccess: () => {
         setSaveMessage("Form saved successfully!");
         setIsSaving(false);
+        // Clear any existing timeout
+        if (saveMessageTimeoutRef.current) {
+          clearTimeout(saveMessageTimeoutRef.current);
+        }
         // Clear message after 3 seconds
-        setTimeout(() => setSaveMessage(""), 3000);
+        saveMessageTimeoutRef.current = setTimeout(() => setSaveMessage(""), 3000);
       },
-      onError: () => {
-        setSaveMessage("Failed to save form. Please try again.");
+      onError: (error: any) => {
+        const errorMessage = error?.response?.data?.message || "Failed to save form. Please try again.";
+        setSaveMessage(errorMessage);
         setIsSaving(false);
+        // Clear any existing timeout
+        if (saveMessageTimeoutRef.current) {
+          clearTimeout(saveMessageTimeoutRef.current);
+        }
         // Clear message after 3 seconds
-        setTimeout(() => setSaveMessage(""), 3000);
+        saveMessageTimeoutRef.current = setTimeout(() => setSaveMessage(""), 3000);
       },
     });
   };
@@ -321,9 +343,56 @@ const ApplicationPage: React.FC = () => {
     }
   };
 
-  if (isLoading) return <div className="p-8">Loading...</div>;
-  if (isError) return <div className="p-8">Error loading data</div>;
-  if (!data) return <div className="p-8">No data found for Case ID: {caseId}</div>;
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading application details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="mx-auto mb-4 w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+              <XCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Application</h2>
+            <p className="text-gray-600 mb-4">We couldn't load the application details. Please try again.</p>
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="mx-auto mb-4 w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+              <FileText className="w-8 h-8 text-gray-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Application Not Found</h2>
+            <p className="text-gray-600 mb-4">No application found for Case ID: {caseId}</p>
+            <Button onClick={() => router.push("/profile?selectedMenu=immigration")} variant="outline">
+              Back to Applications
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const applicationData: ApplicationData = data;
   const steps = applicationData.steps.map((step) => ({
@@ -406,16 +475,19 @@ const ApplicationPage: React.FC = () => {
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge variant={getStatusBadgeVariant(applicationData.status)} className="text-sm px-3 py-1">
-                {applicationData.status}
+                Current Stage: {(() => {
+                  const currentStage = applicationData.steps.find(step => step.stageOrder == applicationData.current_step);
+                  return currentStage ? currentStage.stageName :  `Step ${applicationData.current_step}`;
+                })()}
               </Badge>
               <div className="text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-full">
-                Current Stage: Step {applicationData.current_step} of {applicationData.steps.length}
+                Current Step: ({applicationData.current_step} of {applicationData.steps.length})
               </div>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="flex items-center gap-3">
               <Calendar className="h-5 w-5 text-gray-500" />
               <div>
@@ -428,6 +500,18 @@ const ApplicationPage: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-500">Updated At</p>
                 <p className="font-medium">{new Date(applicationData.updated_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-gray-500" />
+              <div>
+                <p className="text-sm text-gray-500">Estimated Completion</p>
+                <p className="font-medium">
+                  {applicationData.estimated_completion
+                    ? new Date(applicationData.estimated_completion).toLocaleDateString()
+                    : "Not set"
+                  }
+                </p>
               </div>
             </div>
           </div>
@@ -457,7 +541,12 @@ const ApplicationPage: React.FC = () => {
             );
           })}
         </div>
-        <p className="text-center mt-4 text-gray-500">Step {selectedStep} of {steps.length}</p>
+        <p className="text-center mt-4 text-gray-500">
+          {(() => {
+            const currentStage = steps.find(step => step.id === selectedStep);
+            return currentStage ? `${currentStage.title} (${selectedStep} of ${steps.length})` : `Step ${selectedStep} of ${steps.length}`;
+          })()}
+        </p>
       </div>
 
       {/* Step Form Content */}

@@ -5,18 +5,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Trash2 } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
 import React from "react";
 import ChangePassword from "./change-password";
 
-const Setting = ({
-  user,
-  setIsOpen,
-}: {
-  user: IProfile;
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
+const Setting = ({ user }: { user: IProfile }) => {
   return (
     <DropdownMenuContent className="w-56 ">
       <div>
@@ -40,15 +34,7 @@ const Setting = ({
           Logout
         </div>
       </DropdownMenuItem>
-      <DropdownMenuItem className="cursor-pointer">
-        <div
-          className="text-destructive hover:text-destructive flex items-center"
-          onClick={() => setIsOpen(true)}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete Account
-        </div>
-      </DropdownMenuItem>
+
     </DropdownMenuContent>
   );
 };

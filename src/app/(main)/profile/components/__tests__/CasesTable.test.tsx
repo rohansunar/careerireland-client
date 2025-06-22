@@ -17,30 +17,42 @@ jest.mock("next/navigation", () => ({
 const mockCases = [
   {
     id: "C001",
-    caseType: "Dependent Visas",
-    userName: "John Doe",
-    caseStatus: "Open",
-    startDate: "2025-05-01",
-    endDate: "2025-05-15",
-    priority: "High",
+    application_number: "APP001",
+    service_type: "Dependent Visas",
+    status: "Draft",
+    current_step: "1",
+    created_at: "2025-05-01T00:00:00Z",
+    updated_at: "2025-05-15T00:00:00Z",
+    user: {
+      name: "John Doe",
+      email: "john.doe@example.com",
+    },
   },
   {
     id: "C002",
-    caseType: "Stamp Extensions",
-    userName: "Jane Smith",
-    caseStatus: "Closed",
-    startDate: "2025-04-10",
-    endDate: "2025-05-10",
-    priority: "Medium",
+    application_number: "APP002",
+    service_type: "Stamp Extensions",
+    status: "Submitted",
+    current_step: "2",
+    created_at: "2025-04-10T00:00:00Z",
+    updated_at: "2025-05-10T00:00:00Z",
+    user: {
+      name: "Jane Smith",
+      email: "jane.smith@example.com",
+    },
   },
   {
     id: "C003",
-    caseType: "Work Permit Applications",
-    userName: "Muklesh",
-    caseStatus: "Pending",
-    startDate: "2025-04-10",
-    endDate: "2025-05-10",
-    priority: "Low",
+    application_number: "APP003",
+    service_type: "Work Permit Applications",
+    status: "Under_Review",
+    current_step: "3",
+    created_at: "2025-04-10T00:00:00Z",
+    updated_at: "2025-05-10T00:00:00Z",
+    user: {
+      name: "Muklesh",
+      email: "muklesh@example.com",
+    },
   },
 ];
 
@@ -59,13 +71,10 @@ describe("CasesTable", () => {
   it("renders table headers correctly", () => {
     render(<CasesTable {...defaultProps} />);
 
-    expect(screen.getByText("Sno.")).toBeInTheDocument();
-    expect(screen.getByText("Application ID")).toBeInTheDocument();
-    expect(screen.getByText("Package")).toBeInTheDocument();
-    expect(screen.getByText("Name")).toBeInTheDocument();
+    expect(screen.getByText("Application")).toBeInTheDocument();
     expect(screen.getByText("Status")).toBeInTheDocument();
-    expect(screen.getByText("Start Date")).toBeInTheDocument();
-    expect(screen.getByText("End Date")).toBeInTheDocument();
+    expect(screen.getByText("Step")).toBeInTheDocument();
+    expect(screen.getByText("Timeline")).toBeInTheDocument();
     expect(screen.getByText("Actions")).toBeInTheDocument();
   });
 
@@ -73,42 +82,32 @@ describe("CasesTable", () => {
     render(<CasesTable {...defaultProps} />);
 
     // Check first case
-    expect(screen.getByText("C001")).toBeInTheDocument();
-    expect(screen.getByText("Dependent Visas")).toBeInTheDocument();
-    expect(screen.getByText("John Doe")).toBeInTheDocument();
-    expect(screen.getByText("Open")).toBeInTheDocument();
-    expect(screen.getByText("2025-05-01")).toBeInTheDocument();
-    expect(screen.getByText("2025-05-15")).toBeInTheDocument();
+    expect(screen.getByText("APP001")).toBeInTheDocument();
+    expect(screen.getByText("Draft")).toBeInTheDocument();
+    expect(screen.getByText("Step 1")).toBeInTheDocument();
 
     // Check second case
-    expect(screen.getByText("C002")).toBeInTheDocument();
-    expect(screen.getByText("Stamp Extensions")).toBeInTheDocument();
-    expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+    expect(screen.getByText("APP002")).toBeInTheDocument();
+    expect(screen.getByText("Submitted")).toBeInTheDocument();
+    expect(screen.getByText("Step 2")).toBeInTheDocument();
 
     // Check third case
-    expect(screen.getByText("C003")).toBeInTheDocument();
-    expect(screen.getByText("Work Permit Applications")).toBeInTheDocument();
-    expect(screen.getByText("Muklesh")).toBeInTheDocument();
+    expect(screen.getByText("APP003")).toBeInTheDocument();
+    expect(screen.getByText("Under_Review")).toBeInTheDocument();
+    expect(screen.getByText("Step 3")).toBeInTheDocument();
   });
 
   it("renders view buttons for each case", () => {
     render(<CasesTable {...defaultProps} />);
 
-    const viewButtons = screen.getAllByRole("button", { name: /view/i });
+    const viewButtons = screen.getAllByRole("button", { name: /view details/i });
     expect(viewButtons).toHaveLength(mockCases.length);
-
-    // Check that each button has the eye icon
-    viewButtons.forEach((button) => {
-      expect(
-        button.querySelector('[data-testid="eye-icon"]')
-      ).toBeInTheDocument();
-    });
   });
 
   it("navigates to case details when view button is clicked", () => {
     render(<CasesTable {...defaultProps} />);
 
-    const firstViewButton = screen.getAllByRole("button", { name: /view/i })[0];
+    const firstViewButton = screen.getAllByRole("button", { name: /view details/i })[0];
     fireEvent.click(firstViewButton);
 
     expect(mockPush).toHaveBeenCalledWith("/profile/application/C001");
@@ -118,23 +117,23 @@ describe("CasesTable", () => {
     render(<CasesTable {...defaultProps} cases={[]} />);
 
     // Headers should still be present
-    expect(screen.getByText("Application ID")).toBeInTheDocument();
+    expect(screen.getByText("Application")).toBeInTheDocument();
 
     // No case data should be present
-    expect(screen.queryByText("C001")).not.toBeInTheDocument();
+    expect(screen.queryByText("APP001")).not.toBeInTheDocument();
   });
 
   it("applies correct status styling", () => {
     render(<CasesTable {...defaultProps} />);
 
     // Check for status badges
-    const openStatus = screen.getByText("Open");
-    const closedStatus = screen.getByText("Closed");
-    const pendingStatus = screen.getByText("Pending");
+    const draftStatus = screen.getByText("Draft");
+    const submittedStatus = screen.getByText("Submitted");
+    const underReviewStatus = screen.getByText("Under_Review");
 
-    expect(openStatus).toBeInTheDocument();
-    expect(closedStatus).toBeInTheDocument();
-    expect(pendingStatus).toBeInTheDocument();
+    expect(draftStatus).toBeInTheDocument();
+    expect(submittedStatus).toBeInTheDocument();
+    expect(underReviewStatus).toBeInTheDocument();
   });
 
   it("has proper table structure", () => {
@@ -175,7 +174,7 @@ describe("CasesTable", () => {
 
     // Check for column headers
     const columnHeaders = screen.getAllByRole("columnheader");
-    expect(columnHeaders).toHaveLength(8); // 8 columns
+    expect(columnHeaders).toHaveLength(5); // 5 columns
 
     // Check for cells
     const cells = screen.getAllByRole("cell");
@@ -185,7 +184,7 @@ describe("CasesTable", () => {
   it("handles case navigation for all cases", () => {
     render(<CasesTable {...defaultProps} />);
 
-    const viewButtons = screen.getAllByRole("button", { name: /view/i });
+    const viewButtons = screen.getAllByRole("button", { name: /view details/i });
 
     // Test navigation for each case
     viewButtons.forEach((button, index) => {
