@@ -71,7 +71,7 @@ const getCategoryIcon = (category: DocumentCategory) => {
 const DocumentVault: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory>("All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage] = useState(1);
   const pageLimit = 50;
 
   // Fetch documents from API
