@@ -21,6 +21,8 @@ const mockCases = [
     service_type: "Dependent Visas",
     status: "Draft",
     current_step: "1",
+    numberOfSteps: 5,
+    service_name: "Dependent Visas",
     created_at: "2025-05-01T00:00:00Z",
     updated_at: "2025-05-15T00:00:00Z",
     user: {
@@ -34,6 +36,8 @@ const mockCases = [
     service_type: "Stamp Extensions",
     status: "Submitted",
     current_step: "2",
+    numberOfSteps: 4,
+    service_name: "Stamp Extensions",
     created_at: "2025-04-10T00:00:00Z",
     updated_at: "2025-05-10T00:00:00Z",
     user: {
@@ -47,11 +51,28 @@ const mockCases = [
     service_type: "Work Permit Applications",
     status: "Under_Review",
     current_step: "3",
+    numberOfSteps: 3,
+    service_name: "Work Permit Applications",
     created_at: "2025-04-10T00:00:00Z",
     updated_at: "2025-05-10T00:00:00Z",
     user: {
       name: "Muklesh",
       email: "muklesh@example.com",
+    },
+  },
+  {
+    id: "C004",
+    application_number: "APP004",
+    service_type: "Citizenship Applications",
+    status: "Approved",
+    current_step: "4",
+    numberOfSteps: 4,
+    service_name: "Citizenship Applications",
+    created_at: "2025-03-15T00:00:00Z",
+    updated_at: "2025-05-20T00:00:00Z",
+    user: {
+      name: "Sarah Connor",
+      email: "sarah.connor@example.com",
     },
   },
 ];
@@ -72,8 +93,8 @@ describe("CasesTable", () => {
     render(<CasesTable {...defaultProps} />);
 
     expect(screen.getByText("Application")).toBeInTheDocument();
+    expect(screen.getByText("Package")).toBeInTheDocument();
     expect(screen.getByText("Status")).toBeInTheDocument();
-    expect(screen.getByText("Step")).toBeInTheDocument();
     expect(screen.getByText("Timeline")).toBeInTheDocument();
     expect(screen.getByText("Actions")).toBeInTheDocument();
   });
@@ -81,20 +102,23 @@ describe("CasesTable", () => {
   it("renders all case data correctly", () => {
     render(<CasesTable {...defaultProps} />);
 
-    // Check first case
+    // Check first case (current_step: 1, numberOfSteps: 5 = Pending)
     expect(screen.getByText("APP001")).toBeInTheDocument();
-    expect(screen.getByText("Draft")).toBeInTheDocument();
-    expect(screen.getByText("Step 1")).toBeInTheDocument();
+    expect(screen.getByText("Dependent Visas")).toBeInTheDocument();
+    expect(screen.getAllByText("Pending")).toHaveLength(2);
 
-    // Check second case
+    // Check second case (current_step: 2, numberOfSteps: 4 = Pending)
     expect(screen.getByText("APP002")).toBeInTheDocument();
-    expect(screen.getByText("Submitted")).toBeInTheDocument();
-    expect(screen.getByText("Step 2")).toBeInTheDocument();
+    expect(screen.getByText("Stamp Extensions")).toBeInTheDocument();
 
-    // Check third case
+    // Check third case (current_step: 3, numberOfSteps: 3 = Completed)
     expect(screen.getByText("APP003")).toBeInTheDocument();
-    expect(screen.getByText("Under_Review")).toBeInTheDocument();
-    expect(screen.getByText("Step 3")).toBeInTheDocument();
+    expect(screen.getByText("Work Permit Applications")).toBeInTheDocument();
+    expect(screen.getAllByText("Completed")).toHaveLength(2);
+
+    // Check fourth case (current_step: 5, numberOfSteps: 5 = Completed)
+    expect(screen.getByText("APP004")).toBeInTheDocument();
+    expect(screen.getByText("Citizenship Applications")).toBeInTheDocument();
   });
 
   it("renders view buttons for each case", () => {
@@ -130,14 +154,12 @@ describe("CasesTable", () => {
   it("applies correct status styling", () => {
     render(<CasesTable {...defaultProps} />);
 
-    // Check for status badges
-    const draftStatus = screen.getByText("Draft");
-    const submittedStatus = screen.getByText("Submitted");
-    const underReviewStatus = screen.getByText("Under_Review");
+    // Check for application status badges
+    const pendingStatuses = screen.getAllByText("Pending");
+    const completedStatuses = screen.getAllByText("Completed");
 
-    expect(draftStatus).toBeInTheDocument();
-    expect(submittedStatus).toBeInTheDocument();
-    expect(underReviewStatus).toBeInTheDocument();
+    expect(pendingStatuses).toHaveLength(2); // First two cases are pending
+    expect(completedStatuses).toHaveLength(2); // Third and fourth cases are completed
   });
 
   it("has proper table structure", () => {

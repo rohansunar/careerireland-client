@@ -756,6 +756,7 @@ export const useSubmitApplicationStep = () => {
 
 interface Submissiondoc {
   applicationId: string;
+  documentId: string;
   documentName: string;
   file: File | string;
   stageOrder: string;
@@ -768,12 +769,14 @@ export const useSubmitApplicationDocument = () => {
     mutationFn: async ({
       applicationId,
       documentName,
+      documentId,
       file,
       stageOrder,
     }: Submissiondoc) => {
       const formData = new FormData();
       formData.append("document_name", documentName);
       formData.append("file", file);
+      formData.append("document_id", documentId);
       formData.append("stage_order", stageOrder);
 
       const res = await axios.put(

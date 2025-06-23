@@ -96,7 +96,6 @@ const ApplicationPage: React.FC = () => {
 
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [selectedStep, setSelectedStep] = useState<number | null>(null);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>(
     {}
@@ -194,6 +193,7 @@ const ApplicationPage: React.FC = () => {
       {
         applicationId: caseId,
         documentName,
+        documentId,
         file,
         stageOrder: String(stepId),
       },
@@ -223,7 +223,6 @@ const ApplicationPage: React.FC = () => {
   };
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string>("");
   const { mutate: submitStep } = useSubmitApplicationStep();
@@ -290,111 +289,7 @@ const ApplicationPage: React.FC = () => {
     });
   };
 
-  const handleFormSubmit = (stepId: number) => {
-    const step = steps.find((s) => s.id === stepId);
-    if (!step) return;
 
-    const errors: Record<string, string> = {};
-
-    // ✅ Validate custom form fields (only validate fields shown to client)
-    for (const field of step.customForm) {
-      if (field.showToClient) {
-        const fieldKey = `${stepId}-${field.id}`;
-        const value = formData[fieldKey] ?? field.fieldValue;
-        if (
-          field.required &&
-          (value === undefined ||
-            value === null ||
-            value === "" ||
-            value === false)
-        ) {
-          errors[fieldKey] = `${field.fieldName} is required.`;
-        }
-      }
-    }
-
-    // ✅ Validate documents
-    for (const doc of step.documents) {
-      const docKey = `${stepId}-${doc.id}`;
-      const hasUploadedFile = uploadedFiles[docKey]?.name;
-      const hasExistingFile = doc.fileUrl && doc.fileUrl !== "";
-
-      if (doc.required && !hasUploadedFile && !hasExistingFile) {
-        errors[docKey] = `${doc.fileName} is required.`;
-      }
-    }
-
-    setFormErrors(errors);
-    if (Object.keys(errors).length > 0) {
-      // Scroll to first error
-      const firstErrorElement = document.querySelector(".text-red-600");
-      if (firstErrorElement) {
-        firstErrorElement.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }
-      return;
-    }
-
-    // ✅ Create unique list of step IDs (no Set)
-    const stepIdsToSubmit: number[] = [...completedSteps];
-    if (!stepIdsToSubmit.includes(stepId)) {
-      stepIdsToSubmit.push(stepId);
-    }
-
-    // ✅ Build the formData array
-    const formDataArray: StepFormData[] = stepIdsToSubmit
-      .map((id) => {
-        const s = steps.find((step) => step.id === id);
-        if (!s) return null;
-
-        const fields = s.customForm.map((field) => ({
-          fieldName: field.fieldName,
-          fieldValue: formData[`${id}-${field.id}`] ?? field.fieldValue ?? "",
-        }));
-
-        return {
-          stageOrder: id,
-          fields,
-        };
-      })
-      .filter((step): step is StepFormData => step !== null); // TS type guard
-    if (formDataArray.length > 0) {
-      const payload: SubmissionPayload = {
-        applicationId: applicationData.id,
-        formData: formDataArray,
-        currentStep: `${stepId + 1}`,
-      };
-
-      setIsSubmitting(true);
-      submitStep(payload, {
-        onSuccess: () => {
-          if (!completedSteps.includes(stepId)) {
-            setCompletedSteps((prev) => [...prev, stepId]);
-          }
-
-          // Navigate to next step if available, otherwise stay on current step
-          const nextStepIndex = steps.findIndex((s) => s.id === stepId) + 1;
-          if (nextStepIndex < steps.length) {
-            setSelectedStep(steps[nextStepIndex].id);
-          } else {
-            // If this is the last step, application is completed
-            // Could redirect to a completion page or show success message
-          }
-          setIsSubmitting(false);
-        },
-        onError: () => {
-          // Handle submission error
-          setFormErrors((prev) => ({
-            ...prev,
-            [`${stepId}-submit`]: "Submission failed. Please try again.",
-          }));
-          setIsSubmitting(false);
-        },
-      });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -468,30 +363,6 @@ const ApplicationPage: React.FC = () => {
     documentsRequired: step.documentsRequired,
   }));
 
-  const getStatusBadgeVariant = (status: ApplicationStatus) => {
-    switch (status) {
-      case "Draft":
-        return "outline";
-      case "Submitted":
-        return "secondary";
-      case "Under_Review":
-        return "default";
-      case "Additional_Info_Required":
-        return "destructive";
-      case "Approved":
-        return "default";
-      case "Rejected":
-        return "destructive";
-      case "Completed":
-        return "default";
-      case "Cancelled":
-        return "outline";
-      case "On_Hold":
-        return "secondary";
-      default:
-        return "outline";
-    }
-  };
   const statusIcon = (status: ApplicationStatus) => {
     switch (status) {
       case "Draft":
@@ -549,7 +420,6 @@ const ApplicationPage: React.FC = () => {
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge
-                variant={getStatusBadgeVariant(applicationData.status)}
                 className="text-sm px-3 py-1"
               >
                 Current Stage:{" "}
@@ -598,7 +468,7 @@ const ApplicationPage: React.FC = () => {
                     ? new Date(
                         applicationData.estimated_completion
                       ).toLocaleDateString()
-                    : "Not set"}
+                    : "7 working days from the date of document upload completion"}
                 </p>
               </div>
             </div>
@@ -611,6 +481,7 @@ const ApplicationPage: React.FC = () => {
           {steps.map((step, index) => {
             const isCompleted = step.id < applicationData.current_step;
             const isActive = selectedStep === step.id;
+            const isLastStepAndActive = index === steps.length - 1 && isActive;
             return (
               <div key={step.id} className="flex-1 text-center relative">
                 {index !== 0 && (
@@ -634,7 +505,7 @@ const ApplicationPage: React.FC = () => {
                         : "#e5e7eb",
                   }}
                 >
-                  {isCompleted ? "✓" : index + 1}
+                  {isCompleted ? "✓" : isLastStepAndActive ? "✓" : index + 1}
                 </div>
                 <div className="mt-2 text-sm text-gray-700">{step.title}</div>
               </div>
@@ -669,24 +540,20 @@ const ApplicationPage: React.FC = () => {
               <div className="p-6">
                 {/* Custom Fields */}
                 {step.customForm.map((form) => {
-                  // Only show fields that should be visible to client or have existing values
-                  if (!form.showToClient && !form.fieldValue) {
-                    return null;
-                  }
+                  const fieldKey = `${step.id}-${form.id}`;
+                  const currentValue = formData[fieldKey] ?? form.fieldValue ?? "";
 
                   return (
                     <div key={form.id} className="mb-4">
+                      {/* Always show field name as label */}
                       <label className="block text-sm font-medium text-gray-700">
                         {form.fieldName}{" "}
                         {form.required && form.showToClient && (
                           <span className="text-red-500">*</span>
                         )}
                       </label>
-                      {(() => {
-                        const fieldKey = `${step.id}-${form.id}`;
-                        const currentValue =
-                          formData[fieldKey] ?? form.fieldValue ?? "";
 
+                      {(() => {
                         // If field should not be shown to client but has a value, show as read-only
                         if (!form.showToClient && form.fieldValue) {
                           return (
@@ -694,6 +561,11 @@ const ApplicationPage: React.FC = () => {
                               {form.fieldValue}
                             </div>
                           );
+                        }
+
+                        // If field should not be shown to client and has no value, hide completely
+                        if (!form.showToClient && !form.fieldValue) {
+                          return null;
                         }
 
                         // Show editable fields for client
@@ -1048,18 +920,21 @@ const ApplicationPage: React.FC = () => {
                   })}
                 </div>
 
-                {/* Save Form Button - Positioned in bottom-right (hidden for document upload steps) */}
-                {!step.documentsRequired && (
-                  <div className="flex justify-end mb-4">
-                    <Button
-                      onClick={() => handleSaveForm(step.id)}
-                      disabled={isSaving}
-                      className="bg-black hover:bg-gray-800 text-white px-4 py-2 transition-all duration-200 hover:scale-105 shadow-md"
-                    >
-                      {isSaving ? "Saving..." : "Save Form"}
-                    </Button>
-                  </div>
-                )}
+                {/* Save Form Button - Show only when fields have showToClient: true */}
+                {(() => {
+                  const hasClientVisibleFields = step.customForm.some(field => field.showToClient);
+                  return hasClientVisibleFields && (
+                    <div className="flex justify-end mb-4">
+                      <Button
+                        onClick={() => handleSaveForm(step.id)}
+                        disabled={isSaving}
+                        className="bg-black hover:bg-gray-800 text-white px-4 py-2 transition-all duration-200 hover:scale-105 shadow-md"
+                      >
+                        {isSaving ? "Saving..." : "Save Form"}
+                      </Button>
+                    </div>
+                  );
+                })()}
 
                 {/* Save Message */}
                 {saveMessage && (
@@ -1090,15 +965,20 @@ const ApplicationPage: React.FC = () => {
                   </Button>
                   <div className="flex gap-3">
                     <Button
-                      onClick={() => handleFormSubmit(step.id)}
-                      disabled={isSubmitting}
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 transition-all duration-200 hover:scale-105 shadow-lg"
+                      onClick={() => {
+                        // Navigate to next stage without submitting to backend
+                        const nextStepIndex = steps.findIndex((s) => s.id === step.id) + 1;
+                        if (nextStepIndex < steps.length) {
+                          setSelectedStep(steps[nextStepIndex].id);
+                        } else {
+                          // If this is the last step, stay on current step
+                          // Progress bar will show completion status
+                        }
+                      }}
+                      disabled={index === steps.length - 1}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 transition-all duration-200 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isSubmitting
-                        ? "Submitting..."
-                        : index === steps.length - 1
-                          ? "Submit Application"
-                          : "Next Stage"}
+                      {index === steps.length - 1 ? "Completed" : "Next Stage"}
                     </Button>
                   </div>
                 </div>

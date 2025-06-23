@@ -16,7 +16,14 @@ const ITEMS_PER_PAGE = 5;
 // Main dashboard component
 const ImmigrationDashboard: React.FC = () => {
   const { data } = useImmApplication();
-  const sampleCases = data?.data || [];
+
+  // Process cases to ensure numberOfSteps field is correctly mapped
+  const sampleCases = (data?.data || []).map((caseItem: any) => ({
+    ...caseItem,
+    // Priority: 1) Backend numberOfSteps, 2) Calculate from steps array, 3) Default to 5
+    numberOfSteps: caseItem.numberOfSteps ||
+                   (caseItem.steps ? caseItem.steps.length : 5),
+  }));
 
   const [currentPage, setCurrentPage] = useState(1);
 

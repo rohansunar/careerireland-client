@@ -12,6 +12,7 @@ interface Case {
   service_type: string;
   status?: string;
   current_step?: string;
+  numberOfSteps?: number;
   created_at: string;
   updated_at: string;
   service_name: string,
@@ -61,6 +62,47 @@ const getStatusIcon = (status?: string) => {
   }
 };
 
+// New functions for application status logic
+const getApplicationStatus = (currentStep?: string, numberOfSteps?: number): "Completed" | "Pending" => {
+  // Handle missing or invalid data
+  if (!currentStep || !numberOfSteps || numberOfSteps <= 0) {
+    return "Pending";
+  }
+
+  // Convert currentStep to number with proper validation
+  const currentStepNum = parseInt(currentStep, 10);
+
+  // Handle invalid parseInt result
+  if (isNaN(currentStepNum) || currentStepNum <= 0) {
+    return "Pending";
+  }
+
+  // Compare current step with total steps
+  return currentStepNum >= numberOfSteps ? "Completed" : "Pending";
+};
+
+const getApplicationStatusBadgeClass = (status: "Completed" | "Pending") => {
+  switch (status) {
+    case "Completed":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "Pending":
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
+};
+
+const getApplicationStatusIcon = (status: "Completed" | "Pending") => {
+  switch (status) {
+    case "Completed":
+      return <CheckCircle className="w-4 h-4" />;
+    case "Pending":
+      return <Clock className="w-4 h-4" />;
+    default:
+      return <Clock className="w-4 h-4" />;
+  }
+};
+
 
 
 const CasesTable: React.FC<CasesTableProps> = ({
@@ -95,9 +137,8 @@ const CasesTable: React.FC<CasesTableProps> = ({
         <thead className="bg-gray-50">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Application</th>
-            {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th> */}
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Package</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stage</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timeline</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
           </tr>
@@ -123,22 +164,19 @@ const CasesTable: React.FC<CasesTableProps> = ({
                 )}
               </td>
 
-              {/* <td className="px-6 py-4">
-                {c.status && (
-                  <Badge
-                    variant="outline"
-                    className={`w-fit text-xs flex items-center gap-1 ${getStatusBadgeClass(c.status)}`}
-                  >
-                    {getStatusIcon(c.status)}
-                    {c.status}
-                  </Badge>
-                )}
-              </td> */}
-
               <td className="px-6 py-4">
-                {c.current_step && (
-                  <span className="text-sm text-gray-700 font-medium">Stage {c.current_step}</span>
-                )}
+                {(() => {
+                  const applicationStatus = getApplicationStatus(c.current_step, c.numberOfSteps);
+                  return (
+                    <Badge
+                      variant="outline"
+                      className={`w-fit text-xs flex items-center gap-1 ${getApplicationStatusBadgeClass(applicationStatus)}`}
+                    >
+                      {getApplicationStatusIcon(applicationStatus)}
+                      {applicationStatus}
+                    </Badge>
+                  );
+                })()}
               </td>
 
               <td className="px-6 py-4">
