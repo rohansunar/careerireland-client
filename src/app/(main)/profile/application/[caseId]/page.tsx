@@ -724,7 +724,7 @@ const ApplicationPage: React.FC = () => {
                 {/* Documents */}
                 <div className="space-y-4">
                   {step.documents.map((doc) => {
-                    const isApproved = doc.status === "Approved";
+                    const isApproved = doc.status.charAt(0).toUpperCase() + doc.status.slice(1) === "Approved";
                     const hasExistingFile = doc.fileUrl && doc.fileUrl !== "";
                     const canUpload = !isApproved;
                     const isUploading = uploadingFiles[`${step.id}-${doc.id}`];
