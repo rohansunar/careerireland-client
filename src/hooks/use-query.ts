@@ -790,3 +790,39 @@ export const useSubmitApplicationDocument = () => {
     },
   });
 };
+
+// Documents API Hook
+export const useDocuments = (page: number = 1, limit: number = 50) => {
+  const { data: session } = useSession();
+
+  return useQuery({
+    queryKey: ["documents", page, limit],
+    queryFn: async (): Promise<IDocumentResponse> => {
+      const res = await axios.get(`${apiUrl}/documents`, {
+        params: { page, limit },
+        headers: {
+          Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+        },
+      });
+      return res.data;
+    },
+    enabled: !!session?.backendTokens?.accessToken,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+};
+
+// Immigration Services API Hook (for client-side usage)
+export const useImmigrationServices = () => {
+  return useQuery({
+    queryKey: ["immigration-services"],
+    queryFn: async (): Promise<TImmigration[]> => {
+      const res = await axios.get(`${apiUrl}/immigration`);
+      return res.data;
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+};

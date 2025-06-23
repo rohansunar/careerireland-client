@@ -238,3 +238,36 @@ interface IComment {
   };
   replies?: IComment[];
 }
+
+// Document API Types
+interface IDocument {
+  id: string;
+  document_name: string;
+  original_filename: string;
+  document_type: string;
+  document_category: string;
+  file_path: string;
+  file_size: number;
+  user_id: string;
+  guest_email: string | null;
+  expiry_date: string | null;
+  expiry_reminder_sent: boolean;
+  auto_renewal_enabled: boolean;
+  uploaded_by: string;
+  uploaded_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface IDocumentPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+interface IDocumentResponse {
+  status: string;
+  data: IDocument[];
+  pagination: IDocumentPagination;
+}

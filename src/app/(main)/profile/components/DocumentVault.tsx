@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useDocuments } from "@/hooks/use-query";
 
 import {
   FileText,
@@ -11,7 +12,9 @@ import {
   Calendar,
   Shield,
   FolderOpen,
-  Search
+  Search,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -21,83 +24,29 @@ type DocumentCategory =
   | "Financial Documents"
   | "Employment Documents"
   | "Educational Documents"
-  | "Immigration Documents";
+  | "Immigration Documents"
+  | "All";
 
-type DocumentType =
-  | "Passport"
-  | "National ID"
-  | "Birth Certificate"
-  | "Bank Statement"
-  | "Tax Return"
-  | "Salary Slip"
-  | "Employment Letter"
-  | "Contract"
-  | "Reference Letter"
-  | "Degree"
-  | "Transcript"
-  | "Certification"
-  | "Previous Visa"
-  | "Entry Stamp"
-  | "Permit"
-  | "Photo"
-  | "Address Proof";
+// Helper function to map API document categories to display categories
+const mapDocumentCategory = (apiCategory: string): DocumentCategory => {
+  const categoryMap: Record<string, DocumentCategory> = {
+    'identity': 'Identity Documents',
+    'financial': 'Financial Documents',
+    'employment': 'Employment Documents',
+    'educational': 'Educational Documents',
+    'immigration': 'Immigration Documents',
+  };
+  return categoryMap[apiCategory.toLowerCase()] || 'Immigration Documents';
+};
 
-
-
-interface UploadedDoc {
-  id: string;
-  category: DocumentCategory;
-  type: DocumentType;
-  name: string;
-  uploadedAt: Date;
-  expiryDate?: Date;
-  fileSize: string;
-}
-
-// Sample documents with essential data
-const staticUploadedDocs: UploadedDoc[] = [
-  {
-    id: "s1",
-    category: "Identity Documents",
-    type: "Passport",
-    name: "passport_scan.pdf",
-    uploadedAt: new Date("2025-05-01T10:30:00"),
-    expiryDate: new Date("2030-05-01"),
-    fileSize: "2.4 MB",
-  },
-  {
-    id: "s2",
-    category: "Identity Documents",
-    type: "Photo",
-    name: "profile_photo.jpg",
-    uploadedAt: new Date("2025-05-02T15:45:00"),
-    fileSize: "1.2 MB",
-  },
-  {
-    id: "s3",
-    category: "Educational Documents",
-    type: "Degree",
-    name: "degree_certificate.pdf",
-    uploadedAt: new Date("2025-04-28T08:20:00"),
-    fileSize: "3.1 MB",
-  },
-  {
-    id: "s4",
-    category: "Identity Documents",
-    type: "Address Proof",
-    name: "utility_bill.jpg",
-    uploadedAt: new Date("2025-05-03T12:00:00"),
-    fileSize: "1.8 MB",
-  },
-  {
-    id: "s5",
-    category: "Financial Documents",
-    type: "Bank Statement",
-    name: "bank_statement_march.pdf",
-    uploadedAt: new Date("2025-04-15T09:15:00"),
-    fileSize: "856 KB",
-  },
-];
+// Helper function to format file size
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
 
 // Helper functions for styling and categorization
 
@@ -120,21 +69,42 @@ const getCategoryIcon = (category: DocumentCategory) => {
 };
 
 const DocumentVault: React.FC = () => {
-  const [uploadedDocs] = useState<UploadedDoc[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | "All">("All");
+  const [selectedCategory, setSelectedCategory] = useState<DocumentCategory>("All");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageLimit = 50;
 
-  const allDocs = [...staticUploadedDocs, ...uploadedDocs];
+  // Fetch documents from API
+  const { data: documentsResponse, isLoading, error, refetch } = useDocuments(currentPage, pageLimit);
+
+  // Transform API data to display format
+  const transformedDocs = useMemo(() => {
+    if (!documentsResponse?.data) return [];
+
+    return documentsResponse.data.map((doc: IDocument) => ({
+      id: doc.id,
+      category: mapDocumentCategory(doc.document_category),
+      type: doc.document_type,
+      name: doc.original_filename || doc.document_name,
+      uploadedAt: new Date(doc.uploaded_at),
+      expiryDate: doc.expiry_date ? new Date(doc.expiry_date) : undefined,
+      fileSize: formatFileSize(doc.file_size),
+      filePath: doc.file_path,
+      uploadedBy: doc.uploaded_by,
+    }));
+  }, [documentsResponse?.data]);
 
   // Filter documents based on category and search term
-  const filteredDocs = allDocs.filter(doc => {
-    const matchesCategory = selectedCategory === "All" || doc.category === selectedCategory;
-    const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.type.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredDocs = useMemo(() => {
+    return transformedDocs.filter(doc => {
+      const matchesCategory = selectedCategory === "All" || doc.category === selectedCategory;
+      const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           doc.type.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [transformedDocs, selectedCategory, searchTerm]);
 
-  const categories: (DocumentCategory | "All")[] = [
+  const categories: DocumentCategory[] = [
     "All",
     "Identity Documents",
     "Financial Documents",
@@ -142,6 +112,37 @@ const DocumentVault: React.FC = () => {
     "Educational Documents",
     "Immigration Documents"
   ];
+
+  // Error state
+  if (error) {
+    return (
+      <div className="p-6 space-y-6 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <Shield className="w-8 h-8 text-blue-600" />
+              Document Vault
+            </h2>
+            <p className="text-gray-600 mt-1">Secure document management with encryption and verification</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg border p-6">
+          <div className="text-center py-12">
+            <AlertCircle className="w-16 h-16 text-red-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load documents</h3>
+            <p className="text-gray-500 mb-4">
+              There was an error loading your documents. Please try again.
+            </p>
+            <Button onClick={() => refetch()} variant="outline">
+              <Loader2 className="w-4 h-4 mr-2" />
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -159,6 +160,12 @@ const DocumentVault: React.FC = () => {
             <Shield className="w-3 h-3 mr-1" />
             Encrypted Storage
           </Badge>
+          {isLoading && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              Loading...
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -201,21 +208,33 @@ const DocumentVault: React.FC = () => {
         {/* Results Summary */}
         <div className="mb-4">
           <p className="text-sm text-gray-600">
-            Showing {filteredDocs.length} of {allDocs.length} documents
+            Showing {filteredDocs.length} of {transformedDocs.length} documents
             {selectedCategory !== "All" && ` in ${selectedCategory}`}
             {searchTerm && ` matching "${searchTerm}"`}
+            {documentsResponse?.pagination && (
+              <span className="ml-2 text-gray-400">
+                (Page {documentsResponse.pagination.page} of {documentsResponse.pagination.totalPages},
+                Total: {documentsResponse.pagination.total})
+              </span>
+            )}
           </p>
         </div>
 
         {/* Enhanced Document Table */}
-        {filteredDocs.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <Loader2 className="w-16 h-16 text-blue-300 mx-auto mb-4 animate-spin" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Loading documents...</h3>
+            <p className="text-gray-500">Please wait while we fetch your documents</p>
+          </div>
+        ) : filteredDocs.length === 0 ? (
           <div className="text-center py-12">
             <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
             <p className="text-gray-500">
               {searchTerm || selectedCategory !== "All"
                 ? "Try adjusting your filters or search terms"
-                : "No documents available"
+                : "No documents have been uploaded yet"
               }
             </p>
           </div>

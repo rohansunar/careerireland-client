@@ -5,6 +5,128 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-06-23
+
+### 🚀 Added
+
+- **Real API Integration for Document Vault**: Replaced mock data with live API integration
+  - Implemented `useDocuments` hook to fetch documents from `/documents` endpoint
+  - Added comprehensive TypeScript interfaces for document API response structure
+  - Integrated proper authentication with Bearer token for secure API access
+  - Added pagination support with configurable page size and limits
+
+- **Real API Integration for Services Tab**: Replaced empty data with live immigration services
+  - Implemented `useImmigrationServices` hook for client-side immigration service fetching
+  - Integrated with existing `/immigration` endpoint for consistent data structure
+  - Added proper loading states and error handling for service data
+
+- **Enhanced Error Handling**: Comprehensive error management across components
+  - Added user-friendly error messages with retry functionality
+  - Implemented loading indicators with descriptive text
+  - Added proper error boundaries and fallback states
+  - Enhanced error recovery mechanisms with manual retry options
+
+### 🔧 Enhanced
+
+- **Document Vault Component**: Complete overhaul with real API integration
+  - Replaced static mock data with dynamic API-driven content
+  - Added real-time document loading with proper authentication
+  - Implemented file size formatting and category mapping utilities
+  - Enhanced document filtering and search with live data
+  - Added pagination information display with total counts
+
+- **Services Tab Component**: Transformed from placeholder to fully functional
+  - Replaced empty data array with live immigration services
+  - Added comprehensive loading and error states
+  - Implemented consistent styling matching main immigration page
+  - Added service availability messaging and empty state handling
+
+- **TypeScript Type Safety**: Added comprehensive type definitions
+  - Created `IDocument`, `IDocumentPagination`, and `IDocumentResponse` interfaces
+  - Enhanced type safety for API responses and component props
+  - Added proper typing for document categories and file size formatting
+  - Implemented type-safe error handling and loading states
+
+### 🗑️ Removed
+
+- **Mock Data Cleanup**: Eliminated all static mock data from Document Vault
+  - Removed `staticUploadedDocs` array and related mock data structures
+  - Cleaned up unused mock data imports and references
+  - Removed placeholder data arrays from Services tab
+  - Maintained clean codebase with no unused mock data files
+
+### 🎨 UI/UX Improvements
+
+- **Loading States**: Enhanced user experience with proper loading indicators
+  - Added animated loading spinners with descriptive messages
+  - Implemented skeleton loading states for better perceived performance
+  - Added loading badges in component headers during data fetching
+  - Enhanced visual feedback during API operations
+
+- **Error States**: Improved error handling with user-friendly interfaces
+  - Added error icons and clear error messaging
+  - Implemented retry buttons for failed API calls
+  - Added empty state messaging for no data scenarios
+  - Enhanced error recovery with manual refresh options
+
+- **Data Display**: Improved information presentation
+  - Added pagination information with total counts and page numbers
+  - Enhanced document metadata display with proper formatting
+  - Improved service card layout matching main immigration page
+  - Added consistent styling across all components
+
+### 🛠️ Technical Details
+
+#### Files Modified:
+
+- `types/types.d.ts` - Added document API type definitions
+- `src/hooks/use-query.ts` - Added document and immigration service API hooks
+- `src/app/(main)/profile/components/DocumentVault.tsx` - Complete API integration overhaul
+- `src/app/(main)/profile/components/ImmigrationTabs.tsx` - Added services API integration
+- `CHANGELOG.md` - Updated with comprehensive change documentation
+
+#### New API Hooks:
+
+- `useDocuments(page, limit)` - Fetches documents with pagination and authentication
+- `useImmigrationServices()` - Fetches immigration services for client-side usage
+
+#### New TypeScript Interfaces:
+
+- `IDocument` - Complete document structure from API
+- `IDocumentPagination` - Pagination metadata structure
+- `IDocumentResponse` - Full API response structure with data and pagination
+
+#### API Integration Features:
+
+- Bearer token authentication for secure API access
+- Automatic retry logic with exponential backoff
+- Stale time configuration for optimal caching
+- Proper error handling with user-friendly messages
+- Loading state management with visual indicators
+
+### 🧪 Testing & Quality
+
+- **Build Verification**: Ensured successful compilation and development server startup
+  - Verified TypeScript compilation without blocking errors
+  - Confirmed development server runs properly on alternative port
+  - Validated API integration works with proper authentication
+  - Tested error handling and loading states functionality
+
+- **Code Quality**: Maintained high code quality standards
+  - No unused imports or variables after cleanup
+  - Proper TypeScript typing throughout all components
+  - Consistent error handling patterns across components
+  - Clean separation of concerns between API and UI logic
+
+### 📊 Impact
+
+- **Enhanced User Experience**: Real data integration provides actual document and service information
+- **Improved Performance**: Proper caching and loading states optimize user experience
+- **Better Error Handling**: Comprehensive error management prevents user confusion
+- **Type Safety**: Full TypeScript integration prevents runtime errors
+- **Maintainability**: Clean API integration makes future updates easier
+- **Security**: Proper authentication ensures secure data access
+
 ## [1.3.0] - 2025-06-22
 
 ### 🚀 Added
