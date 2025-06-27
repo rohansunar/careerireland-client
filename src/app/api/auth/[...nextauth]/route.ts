@@ -135,17 +135,16 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   cookies: {
-  sessionToken: {
-    name: 'client-session',
-    options: {
-      httpOnly: true, // Ensures the cookie cannot be accessed via JavaScript
-      secure: process.env.NODE_ENV === "development" ? false : true,  // Set to false for HTTP (cookies are sent over HTTP)
-      maxAge: 30 * 24 * 60 * 60, // 30 days
-      path: '/', // Ensures the cookie is available across all routes
+    sessionToken: {
+      name: 'client-session',
+      options: {
+        httpOnly: true, // Ensures the cookie cannot be accessed via JavaScript
+        secure: process.env.NODE_ENV === "production" && process.env.SESSION_SSL === "true" ? true : false,
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+        path: '/', // Ensures the cookie is available across all routes
+      },
     },
   },
-},
-
   pages: {
     signIn: "/auth/login",
     error: "/auth/login",
