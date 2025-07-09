@@ -2,7 +2,7 @@ import ImmigrationCard from "@/components/cards/immigration-card";
 import { apiUrl } from "@/util/urls";
 import React from "react";
 export const getImmigrations = async () => {
-  const res = await fetch(`${apiUrl}/immigration`, {
+  const res = await fetch(`${apiUrl}/immigration?website_visible=true`, {
     next: {
       tags: ["immigrations"],
     },

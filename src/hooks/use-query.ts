@@ -821,7 +821,7 @@ export const useImmigrationServices = () => {
   return useQuery({
     queryKey: ["immigration-services"],
     queryFn: async (): Promise<TImmigration[]> => {
-      const res = await axios.get(`${apiUrl}/immigration`);
+      const res = await axios.get(`${apiUrl}/immigration?website_visible=true`);
       return res.data;
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
