@@ -130,6 +130,7 @@ const ApplicationPage: React.FC = () => {
     "image/jpg",
     "image/png",
     "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ];
   const maxSize = 25 * 1024 * 1024; // 25MB
   const handleDragOver = (e: React.DragEvent) => {
