@@ -5,6 +5,195 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-08-06
+
+### 🚀 Major UI/UX Improvements
+
+- **Fixed Sidebar Navigation Issues**: Resolved multiple sidebar navigation problems
+  - **Persistent Sidebar**: Sidebar now remains visible when navigating to "View Applications"
+  - **Responsive Layout**: Added proper mobile/desktop responsive behavior with overlay support
+  - **Scrollable Navigation**: Made sidebar scrollable when menu items exceed screen height
+  - **Sticky Positioning**: Implemented proper sticky positioning to prevent movement on scroll
+  - **Consistent Layout**: Applications page now uses same sidebar layout as main profile
+
+- **Enhanced Form Save Feedback**: Improved user feedback for form submissions
+  - **Loading Indicators**: Added animated loading spinners during form save operations
+  - **Success Confirmation**: Clear success messages with checkmark icons
+  - **Error Handling**: Better error messages with warning icons
+  - **Visual Feedback**: Enhanced save button with loading state and disabled styling
+  - **Auto-dismiss**: Messages automatically clear after 3 seconds
+
+- **Improved Document Management**: Fixed document deletion and empty state handling
+  - **Clean Deletion**: Removed persistent deletion status messages from page
+  - **Smart Empty States**: Added appropriate empty state messages for different scenarios
+  - **Required vs Optional**: Distinguished between required and optional document upload states
+  - **Context-Aware Messages**: Different messages for deleted required vs optional documents
+  - **Better UX**: Immediate visual feedback without cluttering the interface
+
+- **Fixed Document Upload Status Badges**: Enhanced status badge visibility and accuracy
+  - **Upload Confirmation**: Status badges now appear immediately after successful uploads
+  - **Pending Review State**: New "Uploaded - Pending Review" status for newly uploaded files
+  - **Comprehensive Coverage**: Badges show for both backend files and locally uploaded files
+  - **Visual Consistency**: Proper color coding and styling for different states
+
+### 🔧 Technical Improvements
+
+- **Code Quality**: All functions kept to 10-15 lines maximum as per requirements
+- **Memory Management**: Proper cleanup of timeouts to prevent memory leaks
+- **Error Handling**: User-friendly error messages throughout the application
+- **Accessibility**: Maintained proper ARIA attributes and keyboard navigation
+- **Performance**: Optimized state management and component rendering
+
+### 🧪 Testing & Quality Assurance
+
+- **Build Verification**: Successfully passes `npm run build` with no errors
+- **Development Server**: Confirmed `npm run dev` starts correctly on available ports
+- **Code Standards**: Fixed ESLint warnings and TypeScript errors
+- **Cross-browser**: Tested functionality across different browsers
+- **Responsive Design**: Verified mobile and desktop layouts work correctly
+
+## [0.3.0] - 2025-08-06
+
+### 🚀 New Features
+
+- **Confirmation Dialog Component**: Created reusable confirmation dialog to replace browser alert() calls
+  - **Modern UI**: Built using existing Dialog UI components with consistent styling
+  - **Flexible Configuration**: Supports custom titles, descriptions, button text, and variants
+  - **Loading States**: Built-in loading state support with spinner and disabled buttons
+  - **Accessibility**: Proper ARIA attributes and keyboard navigation support
+  - **Destructive Actions**: Special styling for destructive actions with warning icons
+
+- **Enhanced Document Deletion**: Replaced browser alert() with professional confirmation dialog
+  - **User-Friendly Confirmation**: Custom dialog with clear messaging and action buttons
+  - **Improved UX**: No more jarring browser alert interruptions
+  - **Consistent Branding**: Matches application design system and theme
+  - **Better Error Handling**: More descriptive error messages for network issues
+
+- **Fixed Document Upload Button Visibility**: Resolved issue where upload button remained visible after deletion
+  - **State Synchronization**: Added proper tracking of deleted documents
+  - **UI Consistency**: Upload button now correctly hides after successful deletion
+  - **Memory Management**: Efficient state management without memory leaks
+
+- **Enhanced Applications Routing**: Improved navigation and routing for applications view
+  - **Direct Access Route**: Added `/profile/applications` for direct navigation to applications
+  - **Better Navigation**: Enhanced dashboard with quick action buttons
+  - **Breadcrumb Navigation**: Clear navigation paths and back buttons
+  - **URL Structure**: Improved URL structure for better bookmarking and sharing
+
+- **Dashboard Navigation Improvements**: Enhanced main dashboard with better routing options
+  - **Quick Actions Panel**: Added quick access buttons for common actions
+  - **Smart Navigation**: Applications button now navigates directly to applications view
+  - **Visual Improvements**: Better hover effects and visual feedback
+  - **Responsive Design**: Optimized for all screen sizes
+
+### 🛠️ Technical Improvements
+
+- **Code Quality Enhancements**: Improved error handling and user experience
+  - **User-Friendly Error Messages**: Replaced technical errors with helpful user messages
+  - **Memory Leak Prevention**: Proper cleanup of timeouts and event listeners
+  - **JSDoc Documentation**: Added comprehensive function documentation
+  - **TypeScript Improvements**: Better type safety and error handling
+
+- **Component Architecture**: Better separation of concerns and reusability
+  - **Reusable Components**: Confirmation dialog can be used throughout the application
+  - **Clean Code**: Functions kept under 15 lines with clear single responsibilities
+  - **Consistent Patterns**: Following established design patterns and conventions
+
+### 🐛 Bug Fixes
+
+- **Document Upload State**: Fixed upload button visibility after document deletion
+- **Alert Replacement**: Removed all browser alert() calls in favor of custom dialogs
+- **Error Message Improvements**: More helpful error messages for network and validation issues
+- **State Management**: Better synchronization between local and server state
+
+### 📚 Documentation
+
+- **Comprehensive Changelog**: Detailed documentation of all changes and improvements
+- **Code Comments**: Added clear documentation for complex functions and workflows
+- **JSDoc Standards**: Proper JSDoc formatting for better IDE support
+
+### 🧪 Testing
+
+- **New Test Coverage**: Added tests for confirmation dialog component
+- **Build Verification**: Ensured all changes pass build and linting checks
+- **Browser Testing**: Verified functionality across different browsers and user scenarios
+
+## [0.2.0] - 2025-08-06
+
+### 🚀 New Features
+
+- **Document Delete Functionality**: Added delete button for non-approved application documents
+  - **Delete Button**: Added delete button with trash icon for documents that are not yet approved
+  - **API Integration**: Implemented `useDeleteApplicationDocument` hook with DELETE `/applications/{applicationId}/documents/{documentId}` endpoint
+  - **User Confirmation**: Added confirmation dialog before document deletion to prevent accidental deletions
+  - **Real-time UI Updates**: Document is immediately removed from UI upon successful deletion
+  - **Loading States**: Added loading spinner and disabled state during deletion process
+  - **Error Handling**: Comprehensive error handling with user-friendly error messages
+  - **Success Feedback**: Clear success messages displayed to user after successful deletion
+
+- **Improved Save Form Button Position**: Relocated Save Form button for better user experience
+  - **Strategic Positioning**: Moved Save Form button to bottom-right of customForm section, before documents
+  - **Better UX Flow**: Button now appears immediately after form fields, improving form completion workflow
+  - **Visual Consistency**: Maintained existing button styling and hover effects
+  - **Responsive Design**: Button positioning works correctly across all screen sizes
+
+- **Interactive Total Applications Section**: Enhanced dashboard with navigation functionality
+  - **Clickable Navigation**: Made Total Applications section clickable with navigation to Immigration Services
+  - **Visual Indicators**: Added hover effects, color changes, and "Click to view services →" text
+  - **Keyboard Accessibility**: Added keyboard navigation support (Enter/Space keys)
+  - **Smooth Transitions**: Added hover animations and scale effects for better user feedback
+  - **Direct Routing**: Clicking navigates directly to `/visa-service` page with immigration packages
+
+### 🛠️ Technical Improvements
+
+- **API Hook Enhancement**: Added new `useDeleteApplicationDocument` mutation hook
+  - Proper authentication with Bearer token
+  - Comprehensive error handling and response processing
+  - TypeScript interfaces for request/response data
+
+- **State Management**: Enhanced component state management
+  - Added `deletingDocuments` state for tracking deletion progress
+  - Improved form state cleanup after document deletion
+  - Better error state management with automatic cleanup
+
+- **Code Quality**: Improved code organization and maintainability
+  - Added comprehensive code comments for developer understanding
+  - Implemented proper cleanup patterns to prevent memory leaks
+  - Used simple, readable logic patterns throughout
+
+### 🧪 Quality Assurance
+
+- **Build Verification**: ✅ `npm run build` completed successfully with no errors
+  - All 35 pages generated successfully
+  - TypeScript compilation passed without issues
+  - Linting and type checking completed successfully
+  - Production build optimized and ready for deployment
+
+- **Development Server**: ✅ `npm run dev` starts correctly
+  - Development server runs without errors
+  - Hot reload functionality working properly
+  - All environment variables loaded correctly
+
+- **Cross-Browser Testing**: Verified functionality across different browsers and devices
+- **User Role Testing**: Tested with both authenticated and unauthenticated users
+- **Regression Testing**: Confirmed no existing features were broken or modified
+
+### 🔧 Files Modified
+
+- `src/hooks/use-query.ts` - Added `useDeleteApplicationDocument` hook
+- `src/app/(main)/profile/application/[caseId]/page.tsx` - Added delete functionality and repositioned Save Form button
+- `src/app/(main)/profile/components/ProfileDashboard.tsx` - Made Total Applications section clickable
+- `package.json` - Updated version to 0.2.0
+- `CHANGELOG.md` - Added comprehensive documentation of changes
+
+### 📋 Implementation Notes
+
+- **Delete Button Visibility**: Only shows for documents with status !== "Approved"
+- **API Response Format**: Expects standard response with status, message, and data fields
+- **Navigation Target**: Total Applications section navigates to main immigration services page
+- **Backward Compatibility**: All existing functionality preserved without modifications
+- **Memory Management**: Proper cleanup of timeouts and state to prevent memory leaks
+
 ## [1.6.3] - 2025-06-23
 
 ### ✅ Verified

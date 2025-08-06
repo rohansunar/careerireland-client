@@ -794,6 +794,50 @@ export const useSubmitApplicationDocument = () => {
   });
 };
 
+/**
+ * Hook for deleting application documents
+ *
+ * This hook provides functionality to delete documents from immigration applications.
+ * Only documents that are not yet approved can be deleted.
+ *
+ * @return {UseMutationResult} Mutation object with mutate function for document deletion
+ *
+ * Expected API Response:
+ * {
+ *   "status": "success",
+ *   "message": "Document deleted successfully",
+ *   "data": {
+ *     "documentId": "ad_123456789",
+ *     "applicationId": "app_123456789",
+ *     "deletedFiles": ["documents/app_123456789/document.pdf"]
+ *   }
+ * }
+ */
+export const useDeleteApplicationDocument = () => {
+  const { data: session } = useSession();
+
+  return useMutation({
+    mutationFn: async ({
+      applicationId,
+      documentId,
+    }: {
+      applicationId: string;
+      documentId: string;
+    }) => {
+      // Send DELETE request to remove document from application
+      const res = await axios.delete(
+        `${apiUrl}/applications/${applicationId}/documents/${documentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+          },
+        }
+      );
+      return res.data;
+    },
+  });
+};
+
 // Documents API Hook
 export const useDocuments = (page: number = 1, limit: number = 50) => {
   const { data: session } = useSession();

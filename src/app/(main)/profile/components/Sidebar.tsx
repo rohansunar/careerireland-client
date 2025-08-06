@@ -40,11 +40,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <div
-      className={`bg-white border-r border-gray-200 flex flex-col transition-width duration-300 ease-in-out h-screen shadow-sm
+      className={`bg-white border-r border-gray-200 flex flex-col transition-width duration-300 ease-in-out h-screen shadow-sm sticky top-0
             ${open ? "w-64" : "w-16"}`}
     >
       {/* Header with Branding */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center space-x-3">
           {open && (
             <h1 className="text-xl font-bold text-gray-900">CareerIreland</h1>
@@ -65,12 +65,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Contents Label */}
       {open && (
-        <div className="px-4 py-2 mt-4">
+        <div className="px-4 py-2 mt-4 flex-shrink-0">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Contents</p>
         </div>
       )}
 
-      <nav className="flex flex-col mt-2 space-y-1 flex-1 px-2">
+      {/* Scrollable Navigation Area */}
+      <nav className="flex flex-col mt-2 space-y-1 flex-1 px-2 overflow-y-auto overflow-x-hidden">
         <SidebarItem
           icon={<LayoutDashboard />}
           label="Dashboard"
@@ -129,8 +130,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         />
       </nav>
 
-      {/* Logout Button at Bottom */}
-      <div className="mt-auto p-4 border-t border-gray-200">
+      {/* Logout Button at Bottom - Fixed at bottom */}
+      <div className="mt-auto p-4 border-t border-gray-200 flex-shrink-0">
         <SidebarItem
           icon={<LogOut />}
           label="Logout"

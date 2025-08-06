@@ -5,6 +5,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useImmApplication } from "@/hooks/use-query";
+import { useRouter } from "next/navigation";
 // Using global IProfile interface
 
 interface DashboardBoxProps {
@@ -13,6 +14,8 @@ interface DashboardBoxProps {
   description?: string;
   bgColor?: string;
   icon?: React.ReactNode;
+  onClick?: () => void;
+  clickable?: boolean;
 }
 
 const DashboardBox: React.FC<DashboardBoxProps> = ({
@@ -21,35 +24,84 @@ const DashboardBox: React.FC<DashboardBoxProps> = ({
   description,
   bgColor = "bg-white",
   icon,
-}) => (
-  <div className={`p-6 rounded-lg shadow-sm border border-gray-100 ${bgColor}`}>
-    <div className="flex items-center justify-between">
-      <div className="flex-1">
-        <h3 className="text-gray-600 font-medium text-sm mb-1">{title}</h3>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        {description && (
-          <p className="text-gray-500 text-xs mt-1">{description}</p>
+  onClick,
+  clickable = false,
+}) => {
+  const baseClasses = `p-6 rounded-lg shadow-sm border border-gray-100 ${bgColor}`;
+  const clickableClasses = clickable
+    ? "cursor-pointer hover:shadow-md hover:border-blue-200 transition-all duration-200 hover:scale-105"
+    : "";
+
+  return (
+    <div
+      className={`${baseClasses} ${clickableClasses}`}
+      onClick={onClick}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={clickable ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      } : undefined}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <h3 className={`font-medium text-sm mb-1 ${clickable ? 'text-blue-600' : 'text-gray-600'}`}>
+            {title}
+          </h3>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          {description && (
+            <p className="text-gray-500 text-xs mt-1">{description}</p>
+          )}
+          {clickable && (
+            <p className="text-blue-500 text-xs mt-2 font-medium">Click to view services →</p>
+          )}
+        </div>
+        {icon && (
+          <div className="flex-shrink-0 ml-4">
+            <div className={`w-10 h-10 ${clickable ? 'text-blue-500' : 'text-gray-400'}`}>
+              {icon}
+            </div>
+          </div>
         )}
       </div>
-      {icon && (
-        <div className="flex-shrink-0 ml-4">
-          <div className="w-10 h-10 text-gray-400">
-            {icon}
-          </div>
-        </div>
-      )}
     </div>
-  </div>
-);
+  );
+};
 
 interface ProfileDashboardProps {
   user: IProfile;
 }
 
-const ProfileDashboard: React.FC<ProfileDashboardProps> = ({ user }) => {
+const ProfileDashboard: React.FC<ProfileDashboardProps> = ({ user: _user }) => {
+  const router = useRouter();
+
   // Fetch applications data to get the count
   const { data: applicationsData } = useImmApplication();
   const totalApplications = applicationsData?.data?.length || 0;
+
+  /**
+   * Handle navigation to Applications page
+   *
+   * This function navigates users directly to their applications view
+   * where they can see all their immigration applications and their status.
+   * Triggered when user clicks on the Total Applications dashboard box.
+   */
+  const handleNavigateToApplications = () => {
+    router.push('/profile/applications');
+  };
+
+  /**
+   * Handle navigation to Immigration Services page
+   *
+   * This function navigates users to the main immigration services page
+   * where they can view available immigration packages and services.
+   * Currently unused but kept for future Quick Actions expansion.
+   */
+  // const handleNavigateToServices = () => {
+  //   router.push('/visa-service');
+  // };
 
   return (
     <div className="space-y-6">
@@ -80,12 +132,27 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({ user }) => {
           value={totalApplications}
           description="Immigration applications submitted"
           icon={<FileText className="w-6 h-6" />}
+          onClick={handleNavigateToApplications}
+          clickable={true}
         />
       </div>
 
-
-
-
+      {/* Quick Actions */}
+      {/* <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <button
+            onClick={handleNavigateToApplications}
+            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors text-left"
+          >
+            <FileText className="w-5 h-5 text-blue-600" />
+            <div>
+              <div className="font-medium text-gray-900">View Applications</div>
+              <div className="text-sm text-gray-600">Check status and progress</div>
+            </div>
+          </button>
+        </div>
+      </div> */}
     </div>
   );
 };
