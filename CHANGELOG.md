@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2025-08-07
+
+### 🚀 Enhanced Contact Form Integration
+
+- **Functional Contact Us Form**: Implemented fully functional contact form in client dashboard sidebar
+  - **API Integration**: Connected form to POST /contact-us endpoint with proper error handling
+  - **Auto-population**: Pre-populates name and email fields using authenticated user's profile data
+  - **Form Validation**: Integrated Zod schema validation with react-hook-form for robust input validation
+  - **User Experience**: Replaced browser alerts with modern confirmation dialog components
+  - **Success Feedback**: Added professional success confirmation dialog with proper messaging
+  - **Loading States**: Implemented loading indicators during form submission with disabled button states
+  - **Error Handling**: Comprehensive error handling with user-friendly error messages via toast notifications
+
+- **Code Quality Improvements**: Maintained high code quality standards
+  - **Function Size**: Kept all functions to 10-15 lines maximum as per project requirements
+  - **Code Comments**: Added clear, maintainable code comments for future development
+  - **Component Architecture**: Used existing UI components and patterns for consistency
+  - **Memory Management**: Ensured proper cleanup and no memory leaks in form handling
+
+- **Testing & Validation**: Verified functionality across different user scenarios
+  - **Build Verification**: Confirmed npm run build completes successfully without errors
+  - **Development Server**: Verified npm run dev starts correctly on available ports
+  - **Cross-User Testing**: Form works correctly for both authenticated and unauthenticated users
+  - **Role-Based Testing**: Tested functionality with admin and agent user roles
+  - **Contact Information**: Updated contact details to match existing brand information
+
 ## [0.4.0] - 2025-08-06
 
 ### 🚀 Major UI/UX Improvements
