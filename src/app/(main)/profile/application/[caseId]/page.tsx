@@ -872,13 +872,7 @@ const ApplicationPage: React.FC = () => {
 
                 {/* Documents */}
                 <div className="space-y-4">
-                  {step.documents.length === 0 ? (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
-                      <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Required</h3>
-                      <p className="text-gray-600">This step doesn&apos;t require any document uploads.</p>
-                    </div>
-                  ) : (
+                  {step.documents.length > 0 && (
                     step.documents.map((doc) => {
                     const isApproved = doc.status.charAt(0).toUpperCase() + doc.status.slice(1) === "Approved";
                     const key = `${step.id}-${doc.id}`;
