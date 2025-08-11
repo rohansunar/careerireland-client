@@ -106,11 +106,18 @@ const ApplicationPage: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<
     Record<string, { name: string; url: string; status: string }>
   >({});
+  // Track if any upload is in progress to disable all upload functionality
+  const [isAnyUploadInProgress, setIsAnyUploadInProgress] = useState<boolean>(false);
 
   const { mutate: submitDocument } = useSubmitApplicationDocument();
   const { mutate: deleteDocument } = useDeleteApplicationDocument();
   const [deletingDocuments, setDeletingDocuments] = useState<Record<string, boolean>>({});
   const [deletedDocuments, setDeletedDocuments] = useState<Set<string>>(new Set());
+
+  // Helper function to check if any upload is in progress
+  const checkAnyUploadInProgress = (uploadingState: Record<string, boolean>) => {
+    return Object.values(uploadingState).some(isUploading => isUploading);
+  };
 
   const handleFieldChange = (stepId: number, fieldId: string, value: any) => {
     setFormData((prev) => ({ ...prev, [`${stepId}-${fieldId}`]: value }));
@@ -193,8 +200,12 @@ const ApplicationPage: React.FC = () => {
       return newErrors;
     });
 
-    // Set loading state
-    setUploadingFiles((prev) => ({ ...prev, [key]: true }));
+    // Set loading state and update global upload progress
+    setUploadingFiles((prev) => {
+      const newState = { ...prev, [key]: true };
+      setIsAnyUploadInProgress(checkAnyUploadInProgress(newState));
+      return newState;
+    });
 
     submitDocument(
       {
@@ -223,7 +234,12 @@ const ApplicationPage: React.FC = () => {
             return newSet;
           });
 
-          setUploadingFiles((prev) => ({ ...prev, [key]: false }));
+          // Clear loading state and update global upload progress
+          setUploadingFiles((prev) => {
+            const newState = { ...prev, [key]: false };
+            setIsAnyUploadInProgress(checkAnyUploadInProgress(newState));
+            return newState;
+          });
         },
         onError: (error: any) => {
           // Handle upload error with user-friendly message
@@ -236,7 +252,20 @@ const ApplicationPage: React.FC = () => {
             ...prev,
             [key]: errorMessage,
           }));
-          setUploadingFiles((prev) => ({ ...prev, [key]: false }));
+
+          // Clear loading state and update global upload progress
+          setUploadingFiles((prev) => {
+            const newState = { ...prev, [key]: false };
+            setIsAnyUploadInProgress(checkAnyUploadInProgress(newState));
+            return newState;
+          });
+
+          // Auto-reload page after 3 seconds if system error
+          if (errorMessage.includes("Document upload failed due to a system error")) {
+            setTimeout(() => {
+              window.location.reload();
+            }, 3000);
+          }
         },
       }
     );
@@ -887,6 +916,8 @@ const ApplicationPage: React.FC = () => {
 
                     const canUpload = !isApproved;
                     const isUploading = uploadingFiles[key];
+                    // Disable upload if this document is uploading OR any other upload is in progress
+                    const isUploadDisabled = isUploading || isAnyUploadInProgress;
 
                     return (
                       <div
@@ -1004,18 +1035,20 @@ const ApplicationPage: React.FC = () => {
                             <div className="lg:w-80 lg:flex-shrink-0">
                               {canUpload && (
                                 <div
-                                  onDragOver={(e) => handleDragOver(e)}
-                                  onDragLeave={handleDragLeave}
-                                  onDrop={(e) =>
-                                    handleDrop(e, step.id, doc.id, doc.fileName)
+                                  onDragOver={!isUploadDisabled ? (e) => handleDragOver(e) : undefined}
+                                  onDragLeave={!isUploadDisabled ? handleDragLeave : undefined}
+                                  onDrop={!isUploadDisabled ? (e) =>
+                                    handleDrop(e, step.id, doc.id, doc.fileName) : undefined
                                   }
                                   className={`border-2 border-dashed rounded-xl p-6 transition-all duration-300 ${
-                                    isUploading
-                                      ? "border-blue-400 bg-blue-50 animate-pulse"
-                                      : dragOver
-                                        ? "border-blue-400 bg-blue-50"
-                                        : "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100"
-                                  } ${hasExistingFile ? "border-orange-300 bg-orange-50" : ""}`}
+                                    isUploadDisabled
+                                      ? "border-gray-200 bg-gray-100 cursor-not-allowed opacity-60"
+                                      : isUploading
+                                        ? "border-blue-400 bg-blue-50 animate-pulse"
+                                        : dragOver
+                                          ? "border-blue-400 bg-blue-50"
+                                          : "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100"
+                                  } ${hasExistingFile && !isUploadDisabled ? "border-orange-300 bg-orange-50" : ""}`}
                                 >
                                   <div className="text-center">
                                     <div className="mb-4">
@@ -1026,17 +1059,19 @@ const ApplicationPage: React.FC = () => {
                                       )}
                                     </div>
                                     <p className="text-sm text-gray-700 mb-4 font-medium">
-                                      {isUploading
-                                        ? "Uploading..."
-                                        : dragOver
-                                          ? "Release to drop file"
-                                          : hasExistingFile
-                                            ? "Replace existing file"
-                                            : wasDeletedLocally
-                                              ? doc.required
-                                                ? "Required document deleted - Please upload a new file"
-                                                : "Optional document deleted - Upload a new file if needed"
-                                              : "Drop file here or click to browse"}
+                                      {isUploadDisabled && !isUploading
+                                        ? "Upload in progress - please wait..."
+                                        : isUploading
+                                          ? "Uploading..."
+                                          : dragOver
+                                            ? "Release to drop file"
+                                            : hasExistingFile
+                                              ? "Replace existing file"
+                                              : wasDeletedLocally
+                                                ? doc.required
+                                                  ? "Required document deleted - Please upload a new file"
+                                                  : "Optional document deleted - Upload a new file if needed"
+                                                : "Drop file here or click to browse"}
                                     </p>
                                     <Input
                                       type="file"
@@ -1051,21 +1086,23 @@ const ApplicationPage: React.FC = () => {
                                       className="hidden"
                                       id={`file-input-${step.id}-${doc.id}`}
                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                      disabled={isUploading}
+                                      disabled={isUploadDisabled}
                                     />
                                     <label
                                       htmlFor={`file-input-${step.id}-${doc.id}`}
                                       className={`inline-flex items-center px-4 py-2 border shadow-sm text-sm font-medium rounded-lg transition-all duration-200 ${
-                                        isUploading
+                                        isUploadDisabled
                                           ? "border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed"
                                           : "border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 cursor-pointer hover:shadow-md"
                                       }`}
                                     >
-                                      {isUploading
-                                        ? "Uploading..."
-                                        : hasExistingFile
-                                          ? "Replace File"
-                                          : "Choose File"}
+                                      {isUploadDisabled && !isUploading
+                                        ? "Upload in progress..."
+                                        : isUploading
+                                          ? "Uploading..."
+                                          : hasExistingFile
+                                            ? "Replace File"
+                                            : "Choose File"}
                                     </label>
                                     <p className="text-xs text-gray-500 mt-3">
                                       PDF, JPG, PNG, DOC (25MB max)

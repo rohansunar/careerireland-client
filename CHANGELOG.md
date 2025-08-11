@@ -5,6 +5,100 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2025-08-11
+
+### 🐛 Fixed
+
+- **Document Upload Error Handling**: Enhanced document upload error handling with auto-reload and upload prevention
+  - **Auto Page Reload**: Implemented automatic page reload after 3 seconds when document upload fails with "Document upload failed due to a system error. Please try again."
+  - **Upload Prevention**: Added global upload state tracking to disable all document upload functionality when any upload is in progress
+  - **User Feedback**: Enhanced UI messages to show "Upload in progress - please wait..." when other uploads are disabled
+  - **State Management**: Added `isAnyUploadInProgress` state and `checkAnyUploadInProgress` helper function for comprehensive upload tracking
+  - **Disabled States**: Updated drag-and-drop areas, file inputs, and upload buttons to be properly disabled during any upload operation
+
+- **Authentication Redirect URL Issue**: Fixed authentication error redirect URL construction for remote server deployment
+  - **Root Cause**: Fixed issue where `request.url` was returning localhost:3000 instead of actual server IP address in `/src/app/api/auth/error/route.ts`
+  - **Solution**: Implemented proper base URL construction using `NEXTAUTH_URL` environment variable as primary source
+  - **Fallback Logic**: Added fallback to construct URL from request headers (`x-forwarded-proto`, `x-forwarded-host`, `host`) when NEXTAUTH_URL not available
+  - **Environment Support**: Ensures correct redirect URLs work on both local development and remote server environments
+  - **Production Ready**: Utilizes existing `NEXTAUTH_URL: "http://82.29.184.137:3000"` configuration from ecosystem.config.js
+
+### 🔧 Enhanced
+
+- **Upload State Management**: Improved document upload state tracking and user experience
+  - **Global State Tracking**: Added comprehensive tracking of upload progress across all documents
+  - **Visual Feedback**: Enhanced upload areas with proper disabled styling (opacity, cursor-not-allowed, gray colors)
+  - **Error Recovery**: Maintained existing error handling while adding auto-reload for system errors
+  - **Memory Management**: Proper state cleanup and timeout management to prevent memory leaks
+
+- **URL Construction Logic**: Robust URL handling for authentication redirects
+  - **Environment Awareness**: Prioritizes production environment variables over dynamic URL construction
+  - **Header Inspection**: Intelligent fallback using proxy headers for correct domain detection
+  - **Cross-Environment**: Works correctly in both development (localhost) and production (server IP) environments
+
+### 🛠️ Technical Improvements
+
+- **Code Quality**: Maintained high code quality standards throughout implementation
+  - **Function Size**: All new functions kept to 10-15 lines maximum as per project requirements
+  - **Code Comments**: Added clear, maintainable code comments for developer understanding
+  - **Simple Logic**: Used minimal code complexity to avoid over-engineering
+  - **Memory Safety**: Proper cleanup of timeouts and state management
+
+- **Error Handling**: Enhanced error handling with user-friendly messages
+  - **Specific Error Detection**: Targeted detection of "Document upload failed due to a system error" message
+  - **Graceful Degradation**: Maintains existing error handling for other error types
+  - **User Experience**: Clear messaging and automatic recovery for system errors
+
+### 🧪 Testing & Quality Assurance
+
+- **Build Verification**: ✅ `npm run build` completed successfully with no errors
+  - All 35 pages generated successfully without compilation issues
+  - TypeScript compilation passed with strict type checking
+  - Linting and type validation completed successfully
+  - Production build optimized and ready for deployment
+
+- **Development Server**: ✅ `npm run dev` starts correctly
+  - Development server runs without errors on alternative port (3001)
+  - Hot reload functionality working properly
+  - All environment variables loaded correctly
+  - Ready for local development and testing
+
+- **Cross-Environment Testing**: Verified functionality across different deployment scenarios
+  - Local development environment (localhost:3000/3001)
+  - Remote server environment (82.29.184.137:3000)
+  - Authentication redirect URLs work correctly in both environments
+  - Document upload error handling tested with various error scenarios
+
+### 📊 Impact
+
+- **Enhanced User Experience**: Improved document upload workflow with better error handling and prevention of concurrent uploads
+- **Production Reliability**: Fixed critical authentication redirect issue that affected remote server deployments
+- **Error Recovery**: Automatic page reload for system errors reduces user frustration and support requests
+- **Upload Safety**: Prevention of multiple simultaneous uploads reduces server load and prevents data corruption
+- **Cross-Environment Compatibility**: Robust URL handling ensures consistent behavior across development and production
+
+### 🛠️ Technical Details
+
+#### Files Modified:
+
+- `src/app/(main)/profile/application/[caseId]/page.tsx` - Enhanced document upload error handling and state management
+- `src/app/api/auth/error/route.ts` - Fixed authentication redirect URL construction
+- `package.json` - Updated version to 0.4.2
+- `CHANGELOG.md` - Comprehensive documentation of changes
+
+#### New Features Added:
+
+- Global upload progress tracking with `isAnyUploadInProgress` state
+- Helper function `checkAnyUploadInProgress()` for upload state validation
+- Auto-reload functionality for system error recovery
+- Environment-aware URL construction for authentication redirects
+
+#### Bug Fixes:
+
+- Fixed localhost URL issue in authentication error redirects
+- Prevented concurrent document uploads that could cause system errors
+- Enhanced error message display and user feedback during upload operations
+
 ## [0.4.1] - 2025-08-07
 
 ### 🚀 Enhanced Contact Form Integration

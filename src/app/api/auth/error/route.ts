@@ -41,8 +41,22 @@ export async function GET(request: NextRequest) {
       break;
   }
 
+  // Construct proper base URL using NEXTAUTH_URL or request headers
+  const getBaseUrl = () => {
+    // Use NEXTAUTH_URL if available (production environment)
+    if (process.env.NEXTAUTH_URL) {
+      return process.env.NEXTAUTH_URL;
+    }
+
+    // Fallback to constructing from request headers
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+    return `${protocol}://${host}`;
+  };
+
   // Redirect to login page with error parameter
-  const loginUrl = new URL("/auth/login", request.url);
+  const baseUrl = getBaseUrl();
+  const loginUrl = new URL("/auth/login", baseUrl);
   loginUrl.searchParams.set("error", errorMessage);
 
   return NextResponse.redirect(loginUrl);
