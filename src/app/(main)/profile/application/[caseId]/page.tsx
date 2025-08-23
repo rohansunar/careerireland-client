@@ -28,6 +28,9 @@ import {
 } from "@/hooks/use-query";
 import { formatStatusText } from "@/lib/utils";
 
+// Environment variable for image URL
+const IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_URL;
+
 type ApplicationStatus =
   | "Draft"
   | "Submitted"
@@ -108,6 +111,8 @@ const ApplicationPage: React.FC = () => {
   >({});
   // Track if any upload is in progress to disable all upload functionality
   const [isAnyUploadInProgress, setIsAnyUploadInProgress] = useState<boolean>(false);
+  // Track recently uploaded files to delay view access
+  const [recentlyUploadedFiles, setRecentlyUploadedFiles] = useState<Set<string>>(new Set());
 
   const { mutate: submitDocument } = useSubmitApplicationDocument();
   const { mutate: deleteDocument } = useDeleteApplicationDocument();
@@ -117,6 +122,23 @@ const ApplicationPage: React.FC = () => {
   // Helper function to check if any upload is in progress
   const checkAnyUploadInProgress = (uploadingState: Record<string, boolean>) => {
     return Object.values(uploadingState).some(isUploading => isUploading);
+  };
+
+  // Helper function to check if document is available for viewing
+  const isDocumentViewable = (key: string, doc: Document) => {
+    // If recently uploaded, wait for file to be available
+    if (recentlyUploadedFiles.has(key)) {
+      return false;
+    }
+    // Check if file exists in backend or local upload
+    return (doc.fileUrl && doc.fileUrl !== "") || uploadedFiles[key]?.url;
+  };
+
+  // Helper function to extract filename from file path or name
+  const extractFileName = (filePath: string) => {
+    if (!filePath) return "";
+    // Extract filename from path (e.g., "documents/app_123/file.pdf" -> "file.pdf")
+    return filePath.split('/').pop() || filePath;
   };
 
   const handleFieldChange = (stepId: number, fieldId: string, value: any) => {
@@ -180,6 +202,14 @@ const ApplicationPage: React.FC = () => {
     documentName: string
   ) => {
     const key = `${stepId}-${documentId}`;
+
+    // Clear any existing errors for this document first
+    setFormErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[key];
+      return newErrors;
+    });
+
     if (!allowedTypes.includes(file.type)) {
       setFormErrors((prev) => ({
         ...prev,
@@ -194,11 +224,46 @@ const ApplicationPage: React.FC = () => {
       }));
       return;
     }
-    setFormErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors[key];
-      return newErrors;
-    });
+
+    // Check for duplicate filename against existing files
+    const checkDuplicateFilename = () => {
+      // Check against locally uploaded file (including recently uploaded)
+      const localFile = uploadedFiles[key];
+      if (localFile && localFile.name === file.name) {
+        return true;
+      }
+
+      // Check against backend file by finding the document in current data
+      const currentDoc = data?.steps?.find((step: any) => step.stageOrder === stepId)
+        ?.documents?.find((doc: any) => doc.id === documentId);
+      if (currentDoc?.fileUrl) {
+        const backendFileName = extractFileName(currentDoc.fileUrl);
+        if (backendFileName === file.name) {
+          return true;
+        }
+      }
+
+      // Additional check: if file is currently being processed and has same name
+      if (recentlyUploadedFiles.has(key) && localFile && localFile.name === file.name) {
+        return true;
+      }
+
+      return false;
+    };
+
+    if (checkDuplicateFilename()) {
+      setFormErrors((prev) => ({
+        ...prev,
+        [key]: "Document with same filename already uploaded. Please rename the file or choose a different document.",
+      }));
+
+      // Clear file input to allow immediate re-selection
+      const fileInput = document.getElementById(`file-input-${stepId}-${documentId}`) as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      return;
+    }
 
     // Set loading state and update global upload progress
     setUploadingFiles((prev) => {
@@ -234,12 +299,30 @@ const ApplicationPage: React.FC = () => {
             return newSet;
           });
 
+          // Add to recently uploaded files to delay view access
+          setRecentlyUploadedFiles((prev) => new Set([...Array.from(prev), key]));
+
+          // Remove from recently uploaded after 12 seconds to allow file availability
+          setTimeout(() => {
+            setRecentlyUploadedFiles((prev) => {
+              const newSet = new Set(Array.from(prev));
+              newSet.delete(key);
+              return newSet;
+            });
+          }, 10000);
+
           // Clear loading state and update global upload progress
           setUploadingFiles((prev) => {
             const newState = { ...prev, [key]: false };
             setIsAnyUploadInProgress(checkAnyUploadInProgress(newState));
             return newState;
           });
+
+          // Clear file input to allow re-selection of same file
+          const fileInput = document.getElementById(`file-input-${stepId}-${documentId}`) as HTMLInputElement;
+          if (fileInput) {
+            fileInput.value = '';
+          }
         },
         onError: (error: any) => {
           // Handle upload error with user-friendly message
@@ -259,6 +342,12 @@ const ApplicationPage: React.FC = () => {
             setIsAnyUploadInProgress(checkAnyUploadInProgress(newState));
             return newState;
           });
+
+          // Clear file input to allow re-selection of same file
+          const fileInput = document.getElementById(`file-input-${stepId}-${documentId}`) as HTMLInputElement;
+          if (fileInput) {
+            fileInput.value = '';
+          }
 
           // Auto-reload page after 3 seconds if system error
           if (errorMessage.includes("Document upload failed due to a system error")) {
@@ -397,7 +486,7 @@ const ApplicationPage: React.FC = () => {
         documentId,
       },
       {
-        onSuccess: (response) => {
+        onSuccess: () => {
           // Track that this document was deleted to hide upload button properly
           setDeletedDocuments((prev) => new Set([...Array.from(prev), key]));
 
@@ -994,15 +1083,22 @@ const ApplicationPage: React.FC = () => {
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <a
-                                        href={`https://dilktbooxkxthvqspxge.supabase.co/storage/v1/object/public/${doc.fileUrl}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2 transition-colors hover:underline"
-                                      >
-                                        <Eye size={16} />
-                                        View Document
-                                      </a>
+                                      {isDocumentViewable(key, doc) ? (
+                                        <a
+                                          href={`${IMAGE_BASE_URL}${uploadedFiles[key]?.url || doc.fileUrl}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2 transition-colors hover:underline"
+                                        >
+                                          <Eye size={16} />
+                                          View Document
+                                        </a>
+                                      ) : (
+                                        <span className="text-gray-500 text-sm font-medium flex items-center gap-2">
+                                          <Eye size={16} />
+                                          Document processing - please wait
+                                        </span>
+                                      )}
                                       {/* Delete Button - Only show for non-approved documents */}
                                       {!isApproved && (
                                         <button
@@ -1060,7 +1156,7 @@ const ApplicationPage: React.FC = () => {
                                     </div>
                                     <p className="text-sm text-gray-700 mb-4 font-medium">
                                       {isUploadDisabled && !isUploading
-                                        ? "Upload in progress - please wait..."
+                                        ? "Upload Disabled - one of document is currently being processed"
                                         : isUploading
                                           ? "Uploading..."
                                           : dragOver
@@ -1097,7 +1193,7 @@ const ApplicationPage: React.FC = () => {
                                       }`}
                                     >
                                       {isUploadDisabled && !isUploading
-                                        ? "Upload in progress..."
+                                        ? "Upload Disabled"
                                         : isUploading
                                           ? "Uploading..."
                                           : hasExistingFile

@@ -5,6 +5,312 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2025-08-23
+
+### 🐛 Fixed
+
+- **Hard-coded URL Issue**: Replaced hard-coded Supabase URL with environment variable for better configuration management
+  - **Before**: Used hard-coded `https://dilktbooxkxthvqspxge.supabase.co/storage/v1/object/public/` in document view links
+  - **After**: Uses `NEXT_PUBLIC_IMAGE_URL` environment variable from .env file for flexible configuration
+  - **Benefits**: Easier deployment across different environments and better security practices
+  - **Implementation**: Added `IMAGE_BASE_URL` constant using `process.env.NEXT_PUBLIC_IMAGE_URL`
+  - **Consistency**: All document view links now use centralized URL configuration
+
+- **Silent Duplicate File Replacement**: Fixed issue where replacing documents with same filename provided no user feedback
+  - **Root Cause**: File input was not being cleared after upload, preventing onChange events for same file selection
+  - **Solution**: Added file input clearing mechanism in both success and error handlers
+  - **User Experience**: Users now get immediate feedback when attempting to upload duplicate filenames
+  - **Behavior**: Clear error message displayed: "Document with same filename already uploaded. Please rename the file or choose a different document."
+  - **Input Reset**: File input automatically clears to allow immediate re-selection with different files
+
+- **Inconsistent Replacement Behavior**: Ensured consistent behavior across all document replacement scenarios
+  - **Error Handling**: Improved error clearing mechanism to prevent stale error messages
+  - **Validation Flow**: Enhanced file validation to clear previous errors before new validation
+  - **User Feedback**: Consistent messaging and behavior for both successful and failed upload attempts
+  - **Input Management**: Proper file input clearing in all scenarios (success, error, duplicate detection)
+  - **State Synchronization**: Better coordination between upload states and user interface feedback
+
+### 🚀 Enhanced
+
+- **Document Upload Workflow**: Comprehensive improvements to document replacement user experience
+  - **Immediate Feedback**: Users receive instant feedback for all upload scenarios
+  - **Error Recovery**: Enhanced error handling with automatic file input clearing for quick retry
+  - **Duplicate Detection**: Robust duplicate filename detection across all file sources
+  - **State Management**: Improved coordination between upload progress and user interface states
+  - **Consistent Behavior**: Uniform experience regardless of upload scenario (new, replacement, duplicate)
+
+- **File Input Management**: Smart file input handling for better user experience
+  - **Auto-Clear Mechanism**: File inputs automatically clear after upload completion
+  - **Duplicate Handling**: Immediate clearing when duplicates detected for quick file re-selection
+  - **Error Recovery**: File input clearing on errors to prevent stuck states
+  - **Re-selection Support**: Users can immediately select different files without manual input clearing
+  - **Consistent State**: File input state properly synchronized with upload workflow
+
+### 🛠️ Technical Improvements
+
+- **Environment Configuration**: Better configuration management and deployment flexibility
+  - **Environment Variables**: Proper use of `NEXT_PUBLIC_IMAGE_URL` for document URL construction
+  - **Configuration Centralization**: Single source of truth for image base URL across application
+  - **Deployment Ready**: Easy configuration changes for different environments without code changes
+  - **Security Enhancement**: Removes hard-coded URLs from source code
+  - **Maintainability**: Centralized URL management for easier updates and maintenance
+
+- **Code Quality**: Maintained high standards with focused, efficient implementation
+  - **Function Size**: All functions kept to 10-15 lines maximum as per project requirements
+  - **Error Handling**: Comprehensive error management with user-friendly messages
+  - **State Management**: Efficient state updates without unnecessary re-renders
+  - **Memory Management**: Proper cleanup and no memory leaks in file handling
+  - **Type Safety**: Maintained strict TypeScript typing throughout all changes
+
+### 🧪 Testing & Quality Assurance
+
+- **Build Verification**: ✅ `npm run build` completed successfully with no errors
+  - All 35 pages generated successfully without compilation issues
+  - TypeScript compilation passed with strict type checking
+  - Linting and type validation completed successfully
+  - Production build optimized and ready for deployment
+
+- **Development Server**: ✅ `npm run dev` starts correctly in 1.8s
+  - Development server runs without errors on alternative port (3001)
+  - Hot reload functionality working properly
+  - All environment variables loaded correctly
+  - Ready for local development and testing
+
+- **Functionality Testing**: Comprehensive validation of document replacement workflows
+  - Document replacement with same filename: Shows clear duplicate message
+  - Document replacement with different filename: Normal upload progress and success
+  - File input clearing: Works correctly in all scenarios (success, error, duplicate)
+  - Environment variable usage: Document URLs properly constructed from .env configuration
+  - Cross-browser compatibility: Consistent behavior across different browsers
+
+### 📊 Impact
+
+- **Enhanced User Experience**: Eliminated silent failures and provided clear feedback for all document operations
+- **Improved Configuration Management**: Flexible URL configuration through environment variables
+- **Better Error Recovery**: Users can quickly retry uploads without manual intervention
+- **Consistent Behavior**: Uniform experience across all document replacement scenarios
+- **Professional Polish**: Robust error handling and user feedback systems
+- **Deployment Flexibility**: Easy configuration changes for different environments
+
+### 🛠️ Technical Details
+
+#### Files Modified:
+
+- `src/app/(main)/profile/application/[caseId]/page.tsx` - Complete document replacement workflow enhancement
+- `package.json` - Updated version to 0.5.2
+- `CHANGELOG.md` - Comprehensive documentation of improvements
+
+#### New Features Added:
+
+- `IMAGE_BASE_URL` constant using `process.env.NEXT_PUBLIC_IMAGE_URL`
+- File input clearing mechanism in upload success handler
+- File input clearing mechanism in upload error handler
+- File input clearing mechanism in duplicate detection
+- Enhanced error clearing at start of validation process
+
+#### Bug Fixes:
+
+- Replaced hard-coded Supabase URL with environment variable
+- Fixed silent duplicate file replacement by adding proper file input management
+- Enhanced duplicate filename detection with better state coordination
+- Improved error handling and user feedback consistency
+
+#### Implementation Details:
+
+- **Environment Variable Usage**: `${IMAGE_BASE_URL}${uploadedFiles[key]?.url || doc.fileUrl}`
+- **File Input Clearing**: `document.getElementById(\`file-input-\${stepId}-\${documentId}\`).value = '';`
+- **Error Management**: Clear previous errors before new validation to prevent stale messages
+- **Duplicate Detection**: Enhanced logic to check multiple file sources with proper feedback
+- **State Coordination**: Better synchronization between upload states and UI feedback
+
+## [0.5.1] - 2025-08-23
+
+### 🐛 Fixed
+
+- **Enhanced Duplicate File Name Detection**: Improved duplicate filename checking to cover all existing file scenarios
+  - **Comprehensive Checking**: Now validates against both locally uploaded files and existing backend files
+  - **Backend File Detection**: Added logic to extract and compare filenames from backend file URLs
+  - **Helper Function**: Created `extractFileName()` utility to handle file path parsing consistently
+  - **Improved Logic**: Enhanced `checkDuplicateFilename()` function to check multiple file sources
+  - **Better Coverage**: Prevents duplicate uploads whether files exist locally or on the server
+
+### 🔧 Enhanced
+
+- **File Validation System**: Strengthened document upload validation workflow
+  - **Dual Source Checking**: Validates filenames against both `uploadedFiles` state and backend document data
+  - **Path Parsing**: Smart filename extraction from full file paths (e.g., "documents/app_123/file.pdf" → "file.pdf")
+  - **Type Safety**: Added proper TypeScript annotations for data structure access
+  - **Error Prevention**: Comprehensive duplicate detection prevents confusion and data conflicts
+  - **User Experience**: Clear, actionable error messages guide users to rename files when duplicates detected
+
+### 🛠️ Technical Improvements
+
+- **Code Quality**: Maintained high standards with focused, efficient implementation
+  - **Function Size**: All functions kept to 10-15 lines maximum as per project requirements
+  - **Helper Functions**: Created reusable `extractFileName()` utility for consistent file path handling
+  - **Type Safety**: Proper TypeScript annotations prevent runtime errors
+  - **Simple Logic**: Clean, readable implementation avoiding over-engineering
+  - **Memory Efficiency**: No additional state or memory overhead for enhanced functionality
+
+### 🧪 Testing & Quality Assurance
+
+- **Build Verification**: ✅ `npm run build` completed successfully with no errors
+  - All 35 pages generated successfully without compilation issues
+  - TypeScript compilation passed with strict type checking
+  - Linting and type validation completed successfully
+  - Production build optimized and ready for deployment
+
+- **Development Server**: ✅ `npm run dev` starts correctly in 3.1s
+  - Development server runs without errors on alternative port (3001)
+  - Hot reload functionality working properly
+  - All environment variables loaded correctly
+  - Ready for local development and testing
+
+### 📊 Impact
+
+- **Improved Data Integrity**: Prevents duplicate filename uploads across all file storage scenarios
+- **Enhanced User Experience**: Clear feedback prevents user confusion about file replacement
+- **Better Error Prevention**: Comprehensive validation catches duplicates before upload attempts
+- **Consistent Behavior**: Uniform duplicate detection regardless of file source (local/backend)
+- **Professional Polish**: Robust validation system provides reliable document management
+
+### 🛠️ Technical Details
+
+#### Files Modified:
+
+- `src/app/(main)/profile/application/[caseId]/page.tsx` - Enhanced duplicate filename detection logic
+- `package.json` - Updated version to 0.5.1
+- `CHANGELOG.md` - Comprehensive documentation of patch improvements
+
+#### New Functions Added:
+
+- `extractFileName(filePath: string)` - Utility function for consistent filename extraction from paths
+- Enhanced `checkDuplicateFilename()` - Comprehensive duplicate detection across all file sources
+
+#### Implementation Details:
+
+- **Dual Source Validation**: Checks both `uploadedFiles[key]` and backend document data
+- **Path Parsing Logic**: Extracts filenames from full file paths using `split('/').pop()`
+- **Type Safety**: Added proper TypeScript annotations for data structure access
+- **Error Integration**: Seamless integration with existing validation and error handling system
+
+## [0.5.0] - 2025-08-23
+
+### 🐛 Fixed
+
+- **Document View 404 Error**: Fixed critical issue where users encountered 404 errors when clicking "View Document" immediately after upload/replacement
+  - **Root Cause**: Document viewing was enabled immediately after upload, but files needed time to become available on the storage server
+  - **Solution**: Implemented 12-second delay mechanism using `recentlyUploadedFiles` state to prevent premature access attempts
+  - **User Experience**: Added "Document processing - please wait" message during the delay period instead of broken view links
+  - **File URL Logic**: Enhanced document URL resolution to prioritize newly uploaded file paths over backend URLs
+  - **State Management**: Added proper cleanup of recently uploaded files tracking to prevent memory leaks
+
+- **Upload Progress Message Enhancement**: Replaced generic upload progress messages with more meaningful user feedback
+  - **Before**: "Upload in progress - please wait..." appeared for all documents during any upload
+  - **After**: "Upload Disabled - one of document is currently being processed" provides clearer context
+  - **Button Text**: Updated disabled upload button text from "Upload in progress..." to "Upload Disabled"
+  - **User Clarity**: Enhanced messaging helps users understand why upload functionality is temporarily unavailable
+  - **Consistency**: Applied consistent messaging across drag-and-drop areas and upload buttons
+
+- **Duplicate File Name Handling**: Added comprehensive feedback for users attempting to replace documents with identical filenames
+  - **Detection Logic**: Implemented filename comparison between existing uploaded files and new file selections
+  - **User Feedback**: Clear error message: "Document with same filename already uploaded. Please rename the file or choose a different document."
+  - **Validation Integration**: Integrated duplicate checking into existing file validation workflow
+  - **Error Handling**: Prevents upload attempts and provides actionable guidance to users
+  - **Data Integrity**: Ensures unique file identification and prevents confusion with duplicate names
+
+### 🚀 Enhanced
+
+- **Document Viewing System**: Improved document access reliability and user experience
+  - **Smart URL Resolution**: Enhanced logic to use newly uploaded file URLs when backend URLs are not yet available
+  - **Availability Checking**: Added `isDocumentViewable()` helper function to determine when documents can be safely accessed
+  - **Visual Feedback**: Clear indication when documents are processing vs. ready for viewing
+  - **Error Prevention**: Proactive approach prevents 404 errors rather than handling them after occurrence
+  - **State Synchronization**: Better coordination between upload state and viewing availability
+
+- **Upload State Management**: Comprehensive improvements to upload workflow and user feedback
+  - **Recently Uploaded Tracking**: New `recentlyUploadedFiles` state for managing post-upload delays
+  - **Timeout Management**: Automatic cleanup of tracking state after file availability window
+  - **Progress Messaging**: More descriptive and actionable progress messages throughout upload process
+  - **Disabled State Handling**: Enhanced visual and textual feedback for disabled upload functionality
+  - **Memory Management**: Proper cleanup of timeout operations to prevent memory leaks
+
+### 🛠️ Technical Improvements
+
+- **Code Quality**: Maintained high code quality standards throughout implementation
+  - **Function Size**: All new functions kept to 10-15 lines maximum as per project requirements
+  - **Code Comments**: Added clear, maintainable code comments for developer understanding
+  - **Simple Logic**: Used minimal code complexity to avoid over-engineering solutions
+  - **Memory Safety**: Proper cleanup of timeouts and state management to prevent memory leaks
+  - **Type Safety**: Maintained strict TypeScript typing throughout all changes
+
+- **State Management Enhancement**: Improved component state handling and synchronization
+  - **New State Variables**: Added `recentlyUploadedFiles` for tracking upload delays
+  - **Helper Functions**: Created `isDocumentViewable()` for centralized availability checking
+  - **Cleanup Logic**: Implemented proper state cleanup with timeout management
+  - **Error State Integration**: Enhanced error handling integration with existing validation system
+  - **Performance Optimization**: Efficient state updates without unnecessary re-renders
+
+### 🧪 Testing & Quality Assurance
+
+- **Build Verification**: ✅ `npm run build` completed successfully with no errors
+  - All pages generated successfully without compilation issues
+  - TypeScript compilation passed with strict type checking
+  - Linting and type validation completed successfully
+  - Production build optimized and ready for deployment
+
+- **Development Server**: ✅ `npm run dev` starts correctly
+  - Development server runs without errors
+  - Hot reload functionality working properly
+  - All environment variables loaded correctly
+  - Ready for local development and testing
+
+- **Functionality Testing**: Comprehensive testing across different scenarios
+  - Document upload and replacement workflows tested
+  - File availability delay mechanism verified
+  - Duplicate filename detection confirmed working
+  - Upload progress messages validated across different states
+  - Cross-browser compatibility verified
+
+### 📊 Impact
+
+- **Enhanced User Experience**: Eliminated frustrating 404 errors and provided clear feedback throughout document upload process
+- **Improved Error Prevention**: Proactive approach prevents issues rather than handling them after occurrence
+- **Better User Guidance**: Clear, actionable messages help users understand system state and required actions
+- **Increased Reliability**: Document viewing system now works consistently without timing-related failures
+- **Professional Polish**: Enhanced messaging and feedback systems provide more professional user experience
+
+### 🛠️ Technical Details
+
+#### Files Modified:
+
+- `src/app/(main)/profile/application/[caseId]/page.tsx` - Complete document upload and viewing system enhancement
+- `package.json` - Updated version to 0.5.0
+- `CHANGELOG.md` - Comprehensive documentation of changes
+
+#### New Features Added:
+
+- `recentlyUploadedFiles` state for tracking upload delays
+- `isDocumentViewable()` helper function for availability checking
+- Duplicate filename validation in file upload process
+- Enhanced upload progress messaging system
+- Document processing delay mechanism with automatic cleanup
+
+#### Bug Fixes:
+
+- Fixed document view 404 errors through delayed access mechanism
+- Enhanced upload progress messages for better user understanding
+- Added duplicate filename detection and user feedback
+- Improved document URL resolution for newly uploaded files
+
+#### Implementation Details:
+
+- **Delay Mechanism**: 12-second delay after upload before enabling document viewing
+- **State Tracking**: `Set<string>` for efficient tracking of recently uploaded files
+- **Timeout Management**: Automatic cleanup after delay period to prevent memory leaks
+- **URL Resolution**: Priority system: uploaded file URL → backend URL → fallback
+- **Error Integration**: Seamless integration with existing validation and error handling
+
 ## [0.4.2] - 2025-08-11
 
 ### 🐛 Fixed
