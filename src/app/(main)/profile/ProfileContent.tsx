@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, Suspense, lazy, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Tabs } from "@radix-ui/react-tabs";
 import { MenuKey } from "./components/types";
@@ -59,9 +59,13 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 const ProfileContent: React.FC = () => {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const { data: session } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [selectedMenu, setSelectedMenu] = useState<MenuKey>("dashboard");
+
+  // Check if we're viewing a single application page - hide ProfileContent sidebar
+  const isOnApplicationPage = pathname.includes('/profile/application/');
 
   // Fetch real user profile data
   const { data: userProfile, isLoading, isError } = useQuery({
@@ -151,6 +155,11 @@ const ProfileContent: React.FC = () => {
         return <Profile user={user} />;
     }
   };
+
+  // Don't render ProfileContent layout when on application pages
+  if (isOnApplicationPage) {
+    return null; // Let the application layout handle the rendering
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">

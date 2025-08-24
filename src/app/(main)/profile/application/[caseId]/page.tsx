@@ -1083,37 +1083,54 @@ const ApplicationPage: React.FC = () => {
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      {isDocumentViewable(key, doc) ? (
-                                        <a
-                                          href={`${IMAGE_BASE_URL}${uploadedFiles[key]?.url || doc.fileUrl}`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2 transition-colors hover:underline"
-                                        >
-                                          <Eye size={16} />
-                                          View Document
-                                        </a>
-                                      ) : (
-                                        <span className="text-gray-500 text-sm font-medium flex items-center gap-2">
-                                          <Eye size={16} />
-                                          Document processing - please wait
+                                      {/* Hide buttons during upload, show after upload with existing delay logic */}
+                                      {isUploading ? (
+                                        <span className="text-blue-500 text-sm font-medium flex items-center gap-2">
+                                          <div className="w-4 h-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+                                          Upload in progress - please wait...
                                         </span>
-                                      )}
-                                      {/* Delete Button - Only show for non-approved documents */}
-                                      {!isApproved && (
-                                        <button
-                                          onClick={() => handleDeleteDocument(step.id, doc.id, doc.fileName)}
-                                          disabled={deletingDocuments[`${step.id}-${doc.id}`]}
-                                          className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center gap-1 transition-colors hover:bg-red-50 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                                          title="Delete document"
-                                        >
-                                          {deletingDocuments[`${step.id}-${doc.id}`] ? (
-                                            <div className="w-4 h-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
+                                      ) : (
+                                        <>
+                                          {isDocumentViewable(key, doc) ? (
+                                            <a
+                                              href={`${IMAGE_BASE_URL}${uploadedFiles[key]?.url || doc.fileUrl}`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2 transition-colors hover:underline"
+                                            >
+                                              <Eye size={16} />
+                                              View Document
+                                            </a>
                                           ) : (
-                                            <Trash2 size={16} />
+                                            <span className="text-gray-500 text-sm font-medium flex items-center gap-2">
+                                              <Eye size={16} />
+                                              Processing - Please wait...
+                                            </span>
                                           )}
-                                          {deletingDocuments[`${step.id}-${doc.id}`] ? "Deleting..." : "Delete"}
-                                        </button>
+                                          {/* Delete Button - Synchronized with View Document timing */}
+                                          {!isApproved && (
+                                            isDocumentViewable(key, doc) ? (
+                                              <button
+                                                onClick={() => handleDeleteDocument(step.id, doc.id, doc.fileName)}
+                                                disabled={deletingDocuments[`${step.id}-${doc.id}`]}
+                                                className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center gap-1 transition-colors hover:bg-red-50 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                                title="Delete document"
+                                              >
+                                                {deletingDocuments[`${step.id}-${doc.id}`] ? (
+                                                  <div className="w-4 h-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
+                                                ) : (
+                                                  <Trash2 size={16} />
+                                                )}
+                                                {deletingDocuments[`${step.id}-${doc.id}`] ? "Deleting..." : "Delete"}
+                                              </button>
+                                            ) : (
+                                              <span className="text-gray-500 text-sm font-medium flex items-center gap-1">
+                                                <Trash2 size={16} />
+                                                Processing - Please wait...
+                                              </span>
+                                            )
+                                          )}
+                                        </>
                                       )}
                                     </div>
                                   </div>
@@ -1201,7 +1218,7 @@ const ApplicationPage: React.FC = () => {
                                             : "Choose File"}
                                     </label>
                                     <p className="text-xs text-gray-500 mt-3">
-                                      PDF, JPG, PNG, DOC (25MB max)
+                                      PDF, JPG, PNG, DOC (5MB max)
                                     </p>
                                   </div>
                                 </div>
