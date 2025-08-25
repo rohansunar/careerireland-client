@@ -82,17 +82,9 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_ID!,
       clientSecret: process.env.GOOGLE_SECRET!,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-        },
-      },
       async profile(profile) {
         try {
           const { sub: id, name, email, picture: image } = profile;
-
           const res = await fetch(apiUrl + "/user/google", {
             method: "POST",
             body: JSON.stringify({
@@ -108,11 +100,7 @@ export const authOptions: NextAuthOptions = {
 
           if (!res.ok) {
             if (process.env.NODE_ENV === "development") {
-              console.error(
-                "Google profile API error:",
-                res.status,
-                res.statusText
-              );
+              console.error("Google profile API error:", res.status, res.statusText);
             }
             throw new Error(
               `Failed to create/fetch user profile: ${res.status}`

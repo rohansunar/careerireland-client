@@ -3,6 +3,9 @@
 import React from "react";
 import {
   FileText,
+  Users,
+  BookOpen,
+  Package,
 } from "lucide-react";
 import { useImmApplication } from "@/hooks/use-query";
 import { useRouter } from "next/navigation";
@@ -74,7 +77,7 @@ interface ProfileDashboardProps {
   user: IProfile;
 }
 
-const ProfileDashboard: React.FC<ProfileDashboardProps> = ({ user: _user }) => {
+const ProfileDashboard: React.FC<ProfileDashboardProps> = ({ user }) => {
   const router = useRouter();
 
   // Fetch applications data to get the count
@@ -82,14 +85,53 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({ user: _user }) => {
   const totalApplications = applicationsData?.data?.length || 0;
 
   /**
+   * Calculate total spending from user data
+   * @return {string} Formatted total spending amount
+   */
+  const getTotalSpending = () => {
+    return parseFloat(user.total_spent || '0').toFixed(2);
+  };
+
+  /**
+   * Get unique mentor count from services
+   * @return {number} Number of unique mentors
+   */
+  const getUniqueMentorCount = () => {
+    const mentorIds = new Set();
+    user.services.forEach(service => {
+      if (service.mentor_services?.mentor?.id) {
+        mentorIds.add(service.mentor_services.mentor.id);
+      }
+    });
+    return mentorIds.size;
+  };
+
+  /**
    * Handle navigation to Applications page
-   *
-   * This function navigates users directly to their applications view
-   * where they can see all their immigration applications and their status.
-   * Triggered when user clicks on the Total Applications dashboard box.
    */
   const handleNavigateToApplications = () => {
     router.push('/profile/applications');
+  };
+
+  /**
+   * Handle navigation to Services page
+   */
+  const handleNavigateToServices = () => {
+    router.push('/profile?tab=services');
+  };
+
+  /**
+   * Handle navigation to Packages page
+   */
+  const handleNavigateToPackages = () => {
+    router.push('/profile?tab=packages');
+  };
+
+  /**
+   * Handle navigation to Training page
+   */
+  const handleNavigateToTraining = () => {
+    router.push('/profile?tab=training');
   };
 
   /**
@@ -126,15 +168,60 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({ user: _user }) => {
       </div>
 
       {/* Main Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 max-w-md">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <DashboardBox
-          title="Total Applications"
+          title="Total Spending"
+          value={`€${getTotalSpending()}`}
+          description="Total amount spent on services"
+          bgColor="bg-gradient-to-r from-green-50 to-green-100"
+        />
+        <DashboardBox
+          title="Mentors"
+          value={getUniqueMentorCount()}
+          description="Unique mentors worked with"
+          icon={<Users className="w-6 h-6" />}
+          onClick={handleNavigateToServices}
+          // clickable={getUniqueMentorCount() > 0}
+          bgColor="bg-gradient-to-r from-blue-50 to-blue-100"
+        />
+        <DashboardBox
+          title="Training Programs"
+          value={user.training.length}
+          description="Training programs enrolled"
+          icon={<BookOpen className="w-6 h-6" />}
+          onClick={handleNavigateToTraining}
+          // clickable={user.training.length > 0}
+          bgColor="bg-gradient-to-r from-purple-50 to-purple-100"
+        />
+        <DashboardBox
+          title="Packages"
+          value={user.packages.length}
+          description="Packages purchased"
+          icon={<Package className="w-6 h-6" />}
+          onClick={handleNavigateToPackages}
+          // clickable={user.packages.length > 0}
+          bgColor="bg-gradient-to-r from-orange-50 to-orange-100"
+        />
+      </div>
+
+      {/* Secondary Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <DashboardBox
+          title="Immigration Applications"
           value={totalApplications}
           description="Immigration applications submitted"
           icon={<FileText className="w-6 h-6" />}
           onClick={handleNavigateToApplications}
-          clickable={true}
+          clickable={totalApplications > 0}
+          bgColor="bg-gradient-to-r from-indigo-50 to-indigo-100"
         />
+        {/* <DashboardBox
+          title="Reviews Written"
+          value={user.reviews.length}
+          description="Reviews for mentors"
+          icon={<Star className="w-6 h-6" />}
+          bgColor="bg-gradient-to-r from-yellow-50 to-yellow-100"
+        /> */}
       </div>
 
       {/* Quick Actions */}

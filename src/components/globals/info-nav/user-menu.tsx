@@ -16,20 +16,32 @@ import { LogOut, User } from "lucide-react";
 import Link from "next/link";
 
 const UserMenu = ({ session }: { session: any }) => {
+  // Helper function to get user initials safely
+  const getUserInitials = (name: string | null | undefined): string => {
+    if (!name || typeof name !== 'string') {
+      return 'U'; // Default fallback for undefined/null names
+    }
+    const trimmedName = name.trim();
+    if (trimmedName.length === 0) {
+      return 'U'; // Default fallback for empty names
+    }
+    return trimmedName.substring(0, 2).toUpperCase();
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
         <Avatar className="h-8 w-8">
           <AvatarImage
             src={
-              isValidUrl(session.user.image || "")
+              isValidUrl(session?.user?.image || "")
                 ? `${session.user.image}`
-                : `${imgUrl}${session.user.image}`
+                : `${imgUrl}${session?.user?.image || ""}`
             }
-            alt={session.user.name}
+            alt={session?.user?.name || "User"}
           />
           <AvatarFallback>
-            {session.user.name.substring(0, 2).toUpperCase()}
+            {getUserInitials(session?.user?.name)}
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>

@@ -5,6 +5,90 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2025-08-25
+
+### 🐛 Bug Fixes
+
+- **UserMenu Component**: Fixed TypeError "Cannot read properties of undefined (reading 'substring')" in user-menu.tsx
+  - **Root Cause**: The component was calling `session.user.name.substring(0, 2)` without checking if `session.user.name` was defined
+  - **Solution**: Added comprehensive null/undefined checks with graceful fallback handling
+  - **Helper Function**: Created `getUserInitials()` function (10 lines) to safely extract user initials
+  - **Fallback Logic**: Returns 'U' as default fallback for null, undefined, empty, or whitespace-only names
+  - **Edge Cases**: Handles single character names, special characters, and various undefined states
+  - **Safe Navigation**: Added optional chaining (`?.`) for all session object property access
+  - **User Experience**: Maintains consistent avatar display even with incomplete user data
+
+### 🧪 Testing Improvements
+
+- **UserMenu Tests**: Added comprehensive test suite with 15 test cases covering all edge cases
+  - **Null/Undefined Handling**: Tests for null, undefined, empty string, and whitespace-only names
+  - **Edge Cases**: Tests for single character names and names with special characters
+  - **Session Validation**: Tests for null/undefined session objects and user objects
+  - **Component Structure**: Tests for proper accessibility attributes and component rendering
+  - **Error Prevention**: Ensures component never crashes regardless of session data state
+
+### 🛠️ Technical Improvements
+
+- **Error Handling**: Enhanced error resilience in authentication-related components
+- **Code Quality**: Maintained 10-15 line function size requirement with clear, readable code
+- **Type Safety**: Improved handling of potentially undefined authentication data
+- **Documentation**: Added inline comments explaining the fallback logic for developer understanding
+
+## [0.6.0] - 2025-08-24
+
+### 🚀 New Features
+
+- **Enhanced User Dashboard**: Comprehensive dashboard displaying user data metrics from `/user` endpoint
+  - **Total Spending**: Display total amount spent on services with formatted currency display
+  - **Mentor Count**: Show number of unique mentors worked with, calculated from services data
+  - **Training Programs**: Display count of enrolled training programs with navigation
+  - **Packages**: Show number of purchased packages with clickable navigation
+  - **Immigration Applications**: Display immigration applications count with navigation
+  - **Reviews**: Show count of reviews written for mentors
+  - **Interactive Cards**: Clickable dashboard cards with hover effects and navigation to relevant sections
+  - **Responsive Grid**: Mobile-friendly grid layout adapting from 1 to 4 columns based on screen size
+
+- **Enhanced Data Tables**: Professional table displays for all user data sections
+  - **Services Table**: Comprehensive table showing service name, mentor, amount, status, progress, and date
+  - **Packages Table**: Detailed table with package name, amount, status, progress, and purchase date
+  - **Training Table**: Complete table displaying training program name, amount, status, progress, and enrollment date
+  - **Reviews Table**: Enhanced table with mentor details, star ratings, review content, and date
+  - **Status Badges**: Color-coded status indicators for completed, active, and pending items
+  - **Responsive Design**: Horizontal scrolling on mobile devices for table overflow
+  - **Empty States**: User-friendly empty state messages with relevant icons and descriptions
+
+### 🛠️ Technical Improvements
+
+- **Type Safety**: Added missing `MentorService` interface definition with nested mentor structure
+  - **Interface Definition**: Complete type definition including mentor details (id, name, email, image, designation)
+  - **Type Consistency**: Ensures type safety across service-related components
+  - **Nested Structure**: Proper typing for mentor_services.mentor relationship
+
+- **Component Architecture**: Enhanced component structure with utility functions
+  - **Status Utilities**: Reusable status badge variant functions across all table components
+  - **Helper Functions**: Dashboard calculation functions for spending and mentor counts (10-15 lines each)
+  - **Navigation Handlers**: Clean navigation functions for dashboard card interactions
+  - **Star Rating Component**: Reusable star rating display component for reviews
+
+- **Code Quality**: Improved code maintainability and documentation
+  - **JSDoc Comments**: Complete JSDoc documentation for all functions with parameter and return types
+  - **ESLint Compliance**: All components pass ESLint validation with proper documentation
+  - **Function Size**: All functions kept to 10-15 lines maximum as per project requirements
+  - **Import Optimization**: Removed unused imports and optimized component dependencies
+
+### 🎨 User Experience Enhancements
+
+- **Visual Improvements**: Enhanced visual design with gradient backgrounds and improved spacing
+  - **Gradient Cards**: Beautiful gradient backgrounds for different dashboard metrics
+  - **Hover Effects**: Smooth hover transitions and scale effects for interactive elements
+  - **Icon Integration**: Consistent icon usage across all dashboard cards and table headers
+  - **Color Coding**: Intuitive color schemes for different status types and metrics
+
+- **Navigation Flow**: Improved user navigation between dashboard and detailed views
+  - **Smart Navigation**: Dashboard cards navigate to relevant sections with proper URL parameters
+  - **Breadcrumb Context**: Clear navigation context maintained throughout the application
+  - **Clickable Indicators**: Visual indicators showing which dashboard cards are clickable
+
 ## [0.5.5] - 2025-08-23
 
 ### 🚀 Enhanced

@@ -93,6 +93,20 @@ interface IReview {
   user: IUser;
 }
 
+interface MentorService {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  mentor: {
+    id: string;
+    name: string;
+    email: string;
+    image: string;
+    designation: string;
+  };
+}
+
 interface Service {
   id: string;
   amount: number;
