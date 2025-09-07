@@ -12,6 +12,8 @@ import {
   Eye,
   Info,
   Trash2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,7 +47,8 @@ type ApplicationStatus =
 interface Document {
   id: string;
   fileName: string;
-  fileUrl: string;
+  fileUrls: string[]; // Array of file URLs for multiple files
+  fileCount: number; // Count of files for this document
   required: boolean;
   status: ApplicationStatus;
   requestReason: string;
@@ -98,7 +101,7 @@ const ApplicationPage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
   const caseId = params.caseId as string;
-  const { data, isLoading, isError } = useImmApplicationId(caseId);
+  const { data, isLoading, isError, refetch } = useImmApplicationId(caseId);
 
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [selectedStep, setSelectedStep] = useState<number | null>(null);
@@ -106,18 +109,17 @@ const ApplicationPage: React.FC = () => {
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>(
     {}
   );
-  const [uploadedFiles, setUploadedFiles] = useState<
-    Record<string, { name: string; url: string; status: string }>
-  >({});
   // Track if any upload is in progress to disable all upload functionality
   const [isAnyUploadInProgress, setIsAnyUploadInProgress] = useState<boolean>(false);
-  // Track recently uploaded files to delay view access
+  // Track recently uploaded files to delay button access (5 seconds)
   const [recentlyUploadedFiles, setRecentlyUploadedFiles] = useState<Set<string>>(new Set());
 
   const { mutate: submitDocument } = useSubmitApplicationDocument();
   const { mutate: deleteDocument } = useDeleteApplicationDocument();
   const [deletingDocuments, setDeletingDocuments] = useState<Record<string, boolean>>({});
   const [deletedDocuments, setDeletedDocuments] = useState<Set<string>>(new Set());
+  // State for managing expanded/collapsed file lists
+  const [expandedFileLists, setExpandedFileLists] = useState<Record<string, boolean>>({});
 
   // Helper function to check if any upload is in progress
   const checkAnyUploadInProgress = (uploadingState: Record<string, boolean>) => {
@@ -126,12 +128,12 @@ const ApplicationPage: React.FC = () => {
 
   // Helper function to check if document is available for viewing
   const isDocumentViewable = (key: string, doc: Document) => {
-    // If recently uploaded, wait for file to be available
+    // If recently uploaded, wait 5 seconds for files to be processed
     if (recentlyUploadedFiles.has(key)) {
       return false;
     }
-    // Check if file exists in backend or local upload
-    return (doc.fileUrl && doc.fileUrl !== "") || uploadedFiles[key]?.url;
+    // Check if files exist in backend only
+    return doc.fileUrls && doc.fileUrls.length > 0;
   };
 
   // Helper function to extract filename from file path or name
@@ -141,8 +143,29 @@ const ApplicationPage: React.FC = () => {
     return filePath.split('/').pop() || filePath;
   };
 
+  // Helper function to get all file information for a document (backend data only)
+  const getDocumentFiles = (key: string, doc: Document) => {
+    const backendFiles = doc.fileUrls || [];
+    const fileNames = backendFiles.map(extractFileName);
+
+    return {
+      fileNames,
+      fileUrls: backendFiles,
+      fileCount: fileNames.length,
+      hasFiles: fileNames.length > 0
+    };
+  };
+
   const handleFieldChange = (stepId: number, fieldId: string, value: any) => {
     setFormData((prev) => ({ ...prev, [`${stepId}-${fieldId}`]: value }));
+  };
+
+  // Helper function to toggle file list expansion
+  const toggleFileListExpansion = (key: string) => {
+    setExpandedFileLists((prev) => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
   };
   useEffect(() => {
     if (data && data.current_step) {
@@ -183,8 +206,8 @@ const ApplicationPage: React.FC = () => {
   ) => {
     e.preventDefault();
     setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFileValidation(file, stepId, documentId, documentName);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) handleMultipleFileValidation(files, stepId, documentId, documentName);
   };
   const handleFileChange = (
     stepId: number,
@@ -192,11 +215,11 @@ const ApplicationPage: React.FC = () => {
     documentName: string,
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const file = e.target.files?.[0];
-    if (file) handleFileValidation(file, stepId, documentId, documentName);
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length > 0) handleMultipleFileValidation(files, stepId, documentId, documentName);
   };
-  const handleFileValidation = (
-    file: File,
+  const handleMultipleFileValidation = (
+    files: File[],
     stepId: number,
     documentId: string,
     documentName: string
@@ -210,51 +233,63 @@ const ApplicationPage: React.FC = () => {
       return newErrors;
     });
 
-    if (!allowedTypes.includes(file.type)) {
-      setFormErrors((prev) => ({
-        ...prev,
-        [key]: "Invalid file type. Allowed: PDF, JPG, JPEG, PNG, DOC.",
-      }));
-      return;
-    }
-    if (file.size > maxSize) {
-      setFormErrors((prev) => ({
-        ...prev,
-        [key]: "File size exceeds 25MB limit.",
-      }));
-      return;
-    }
+    // Validate each file
+    const validationErrors: string[] = [];
+    const validFiles: File[] = [];
 
-    // Check for duplicate filename against existing files
-    const checkDuplicateFilename = () => {
-      // Check against locally uploaded file (including recently uploaded)
-      const localFile = uploadedFiles[key];
-      if (localFile && localFile.name === file.name) {
-        return true;
+    files.forEach((file, index) => {
+      if (!allowedTypes.includes(file.type)) {
+        validationErrors.push(`File ${index + 1} (${file.name}): Invalid file type. Allowed: PDF, JPG, JPEG, PNG, DOC.`);
+        return;
       }
+      if (file.size > maxSize) {
+        validationErrors.push(`File ${index + 1} (${file.name}): File size exceeds 25MB limit.`);
+        return;
+      }
+      validFiles.push(file);
+    });
 
-      // Check against backend file by finding the document in current data
+    // If there are validation errors, show them and return
+    if (validationErrors.length > 0) {
+      setFormErrors((prev) => ({
+        ...prev,
+        [key]: validationErrors.join(' '),
+      }));
+      return;
+    }
+
+    // Check for duplicate filenames against existing backend files
+    const checkDuplicateFilenames = (filesToCheck: File[]) => {
+      const duplicateErrors: string[] = [];
+      const existingFileNames = new Set<string>();
+
+      // Get existing backend file names only
       const currentDoc = data?.steps?.find((step: any) => step.stageOrder === stepId)
         ?.documents?.find((doc: any) => doc.id === documentId);
-      if (currentDoc?.fileUrl) {
-        const backendFileName = extractFileName(currentDoc.fileUrl);
-        if (backendFileName === file.name) {
-          return true;
+
+      if (currentDoc?.fileUrls) {
+        currentDoc.fileUrls.forEach((url: string) => {
+          existingFileNames.add(extractFileName(url));
+        });
+      }
+
+      // Check each new file for duplicates
+      filesToCheck.forEach((file, index) => {
+        if (existingFileNames.has(file.name)) {
+          duplicateErrors.push(`File ${index + 1} (${file.name}): Already uploaded. Please rename or choose different file.`);
+        } else {
+          existingFileNames.add(file.name); // Add to set to check against other files in this batch
         }
-      }
+      });
 
-      // Additional check: if file is currently being processed and has same name
-      if (recentlyUploadedFiles.has(key) && localFile && localFile.name === file.name) {
-        return true;
-      }
-
-      return false;
+      return duplicateErrors;
     };
 
-    if (checkDuplicateFilename()) {
+    const duplicateErrors = checkDuplicateFilenames(validFiles);
+    if (duplicateErrors.length > 0) {
       setFormErrors((prev) => ({
         ...prev,
-        [key]: "Document with same filename already uploaded. Please rename the file or choose a different document.",
+        [key]: duplicateErrors.join(' '),
       }));
 
       // Clear file input to allow immediate re-selection
@@ -277,20 +312,12 @@ const ApplicationPage: React.FC = () => {
         applicationId: caseId,
         documentName,
         documentId,
-        file,
+        files: validFiles, // Pass multiple files
         stageOrder: String(stepId),
       },
       {
-        onSuccess: (res) => {
-          // Upload successful
-          setUploadedFiles((prev) => ({
-            ...prev,
-            [key]: {
-              name: res.data.document_name,
-              url: res.data.file_path,
-              status: res.data.status,
-            },
-          }));
+        onSuccess: async (res) => {
+          // Upload successful - refresh backend data instead of local state
 
           // Remove from deleted documents set since we have a new upload
           setDeletedDocuments((prev) => {
@@ -299,17 +326,20 @@ const ApplicationPage: React.FC = () => {
             return newSet;
           });
 
-          // Add to recently uploaded files to delay view access
+          // Refresh backend data to get updated file list
+          await refetch();
+
+          // Add to recently uploaded files to delay button access for 5 seconds
           setRecentlyUploadedFiles((prev) => new Set([...Array.from(prev), key]));
 
-          // Remove from recently uploaded after 12 seconds to allow file availability
+          // Remove from recently uploaded after 5 seconds to enable buttons
           setTimeout(() => {
             setRecentlyUploadedFiles((prev) => {
               const newSet = new Set(Array.from(prev));
               newSet.delete(key);
               return newSet;
             });
-          }, 10000);
+          }, 5000);
 
           // Clear loading state and update global upload progress
           setUploadingFiles((prev) => {
@@ -318,7 +348,7 @@ const ApplicationPage: React.FC = () => {
             return newState;
           });
 
-          // Clear file input to allow re-selection of same file
+          // Clear file input to allow re-selection
           const fileInput = document.getElementById(`file-input-${stepId}-${documentId}`) as HTMLInputElement;
           if (fileInput) {
             fileInput.value = '';
@@ -343,7 +373,7 @@ const ApplicationPage: React.FC = () => {
             return newState;
           });
 
-          // Clear file input to allow re-selection of same file
+          // Clear file input to allow re-selection
           const fileInput = document.getElementById(`file-input-${stepId}-${documentId}`) as HTMLInputElement;
           if (fileInput) {
             fileInput.value = '';
@@ -458,9 +488,28 @@ const ApplicationPage: React.FC = () => {
     // Show confirmation dialog to prevent accidental deletions
     setConfirmDialog({
       isOpen: true,
-      title: "Delete Document",
-      description: `Are you sure you want to delete "${documentName}"? This action cannot be undone.`,
+      title: "Delete All Files",
+      description: `Are you sure you want to delete all files for "${documentName}"? This action cannot be undone.`,
       onConfirm: () => performDocumentDeletion(stepId, documentId),
+    });
+  };
+
+  /**
+   * Handle individual file deletion for immigration applications
+   *
+   * @param {number} stepId - The step/stage ID where the document belongs
+   * @param {string} documentId - Unique identifier for the document
+   * @param {string} documentName - Display name of the document
+   * @param {number} fileIndex - Index of the specific file to delete
+   * @param {string} fileName - Name of the specific file to delete
+   */
+  const handleDeleteIndividualFile = (stepId: number, documentId: string, documentName: string, fileIndex: number, fileName: string) => {
+    // Show confirmation dialog to prevent accidental deletions
+    setConfirmDialog({
+      isOpen: true,
+      title: "Delete File",
+      description: `Are you sure you want to delete "${fileName}" from "${documentName}"? This action cannot be undone.`,
+      onConfirm: () => performIndividualFileDeletion(stepId, documentId, fileIndex),
     });
   };
 
@@ -479,23 +528,17 @@ const ApplicationPage: React.FC = () => {
     // Set loading state for this specific document
     setDeletingDocuments((prev) => ({ ...prev, [key]: true }));
 
-    // Call API to delete document
+    // Call API to delete all files for document
     deleteDocument(
       {
         applicationId: caseId,
         documentId,
+        // No fileIndex means delete all files
       },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           // Track that this document was deleted to hide upload button properly
           setDeletedDocuments((prev) => new Set([...Array.from(prev), key]));
-
-          // Remove document from uploaded files state to update UI
-          setUploadedFiles((prev) => {
-            const newFiles = { ...prev };
-            delete newFiles[key];
-            return newFiles;
-          });
 
           // Clear any form errors for this document
           setFormErrors((prev) => {
@@ -504,17 +547,71 @@ const ApplicationPage: React.FC = () => {
             return newErrors;
           });
 
+          // Refresh backend data to get updated file list
+          await refetch();
+
           // Clear loading state
           setDeletingDocuments((prev) => ({ ...prev, [key]: false }));
-
-          // No persistent success message - deletion is immediately reflected in UI
-          // Document removal from the list serves as confirmation
         },
         onError: (error: any) => {
           // Extract error message from API response or use fallback
           const errorMessage =
             error?.response?.data?.message ||
             "Unable to delete document. Please check your internet connection and try again.";
+          setSaveMessage(errorMessage);
+
+          // Clear loading state
+          setDeletingDocuments((prev) => ({ ...prev, [key]: false }));
+
+          // Auto-clear error message after 3 seconds
+          if (saveMessageTimeoutRef.current) {
+            clearTimeout(saveMessageTimeoutRef.current);
+          }
+          saveMessageTimeoutRef.current = setTimeout(
+            () => setSaveMessage(""),
+            3000
+          );
+        },
+      }
+    );
+  };
+
+  /**
+   * Perform individual file deletion after confirmation
+   *
+   * @param {number} stepId - The step/stage ID where the document belongs
+   * @param {string} documentId - Unique identifier for the document
+   * @param {number} fileIndex - Index of the specific file to delete
+   */
+  const performIndividualFileDeletion = (stepId: number, documentId: string, fileIndex: number) => {
+    const key = `${stepId}-${documentId}`;
+
+    // Close confirmation dialog
+    setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+
+    // Set loading state for this specific document
+    setDeletingDocuments((prev) => ({ ...prev, [key]: true }));
+
+    // Call API to delete specific file
+    deleteDocument(
+      {
+        applicationId: caseId,
+        documentId,
+        fileIndex, // Specify which file to delete
+      },
+      {
+        onSuccess: async () => {
+          // Refresh backend data to get updated file list
+          await refetch();
+
+          // Clear loading state
+          setDeletingDocuments((prev) => ({ ...prev, [key]: false }));
+        },
+        onError: (error: any) => {
+          // Extract error message from API response or use fallback
+          const errorMessage =
+            error?.response?.data?.message ||
+            "Unable to delete file. Please check your internet connection and try again.";
           setSaveMessage(errorMessage);
 
           // Clear loading state
@@ -998,10 +1095,9 @@ const ApplicationPage: React.FC = () => {
                     // Check if document was deleted locally
                     const wasDeletedLocally = deletedDocuments.has(key);
 
-                    // Check if file exists: backend file OR local upload, but NOT if deleted locally
-                    const hasBackendFile = doc.fileUrl && doc.fileUrl !== "";
-                    const hasLocalUpload = uploadedFiles[key]?.name;
-                    const hasExistingFile = !wasDeletedLocally && (hasBackendFile || hasLocalUpload);
+                    // Check if files exist: backend files only, but NOT if deleted locally
+                    const hasBackendFiles = doc.fileUrls && doc.fileUrls.length > 0;
+                    const hasExistingFile = !wasDeletedLocally && hasBackendFiles;
 
                     const canUpload = !isApproved;
                     const isUploading = uploadingFiles[key];
@@ -1042,106 +1138,139 @@ const ApplicationPage: React.FC = () => {
                                 </div>
                               </div>
 
-                              {/* Status Badge - Show for backend files or locally uploaded files */}
+                              {/* Status Badge - Show for backend files only */}
                               <div className="mb-4">
-                                {(doc.fileUrl || uploadedFiles[key]) && (
+                                {(doc.fileUrls && doc.fileUrls.length > 0) && (
                                 <Badge
                                   variant={
-                                    uploadedFiles[key] && !doc.fileUrl
-                                      ? "secondary" // Newly uploaded, pending review
-                                      : doc.status === "Approved"
-                                        ? "default"
-                                        : doc.status === "Completed"
-                                          ? "secondary"
-                                          : doc.status === "Rejected"
+                                    doc.status === "Approved"
+                                      ? "default"
+                                      : doc.status === "Completed"
+                                        ? "secondary"
+                                        : doc.status === "Rejected"
+                                          ? "destructive"
+                                          : doc.status === "Additional_Info_Required"
                                             ? "destructive"
-                                            : doc.status ===
-                                                "Additional_Info_Required"
-                                              ? "destructive"
-                                              : "outline"
+                                            : "outline"
                                   }
                                   className="text-sm px-3 py-1 font-medium"
                                 >
-                                  {uploadedFiles[key] && !doc.fileUrl
-                                    ? "Upload Status: Uploaded - Pending Review"
-                                    : `Review Status: ${formatStatusText(doc.status)}`}
+                                  Review Status: {formatStatusText(doc.status)}
                                 </Badge>
                                 )}
                               </div>
 
-                              {/* Existing File Display */}
-                              {hasExistingFile && (
-                                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <CheckCircle
-                                        size={16}
-                                        className="text-green-600"
-                                      />
-                                      <span className="text-sm text-green-800 font-medium">
-                                        File Uploaded
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      {/* Hide buttons during upload, show after upload with existing delay logic */}
-                                      {isUploading ? (
-                                        <span className="text-blue-500 text-sm font-medium flex items-center gap-2">
-                                          <div className="w-4 h-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
-                                          Upload in progress - please wait...
+                              {/* Multiple Files Display */}
+                              {hasExistingFile && (() => {
+                                const documentFiles = getDocumentFiles(key, doc);
+                                const isExpanded = expandedFileLists[key] || false;
+                                const showExpandButton = documentFiles.fileCount > 1;
+
+                                return (
+                                  <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <div className="flex items-center gap-2">
+                                        <CheckCircle size={16} className="text-green-600" />
+                                        <span className="text-sm text-green-800 font-medium">
+                                          {documentFiles.fileCount === 1
+                                            ? "File Uploaded"
+                                            : `${documentFiles.fileCount} Files Uploaded`}
                                         </span>
-                                      ) : (
-                                        <>
-                                          {isDocumentViewable(key, doc) ? (
-                                            <a
-                                              href={`${IMAGE_BASE_URL}${uploadedFiles[key]?.url || doc.fileUrl}`}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2 transition-colors hover:underline"
-                                            >
-                                              <Eye size={16} />
-                                              View Document
-                                            </a>
-                                          ) : (
-                                            <span className="text-gray-500 text-sm font-medium flex items-center gap-2">
-                                              <Eye size={16} />
-                                              Processing - Please wait...
-                                            </span>
-                                          )}
-                                          {/* Delete Button - Synchronized with View Document timing */}
-                                          {!isApproved && (
-                                            isDocumentViewable(key, doc) ? (
+                                        {showExpandButton && (
+                                          <button
+                                            onClick={() => toggleFileListExpansion(key)}
+                                            className="text-green-600 hover:text-green-800 transition-colors"
+                                            title={isExpanded ? "Collapse file list" : "Expand file list"}
+                                          >
+                                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      {/* Global Actions */}
+                                      <div className="flex items-center gap-2">
+                                        {isUploading ? (
+                                          <span className="text-blue-500 text-sm font-medium flex items-center gap-2">
+                                            <div className="w-4 h-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+                                            Upload in progress - please wait...
+                                          </span>
+                                        ) : (
+                                          <>
+                                            {!isApproved && isDocumentViewable(key, doc) && (
                                               <button
                                                 onClick={() => handleDeleteDocument(step.id, doc.id, doc.fileName)}
                                                 disabled={deletingDocuments[`${step.id}-${doc.id}`]}
                                                 className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center gap-1 transition-colors hover:bg-red-50 px-2 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                                                title="Delete document"
+                                                title="Delete all files"
                                               >
                                                 {deletingDocuments[`${step.id}-${doc.id}`] ? (
                                                   <div className="w-4 h-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
                                                 ) : (
                                                   <Trash2 size={16} />
                                                 )}
-                                                {deletingDocuments[`${step.id}-${doc.id}`] ? "Deleting..." : "Delete"}
+                                                {deletingDocuments[`${step.id}-${doc.id}`] ? "Deleting..." : "Delete All"}
                                               </button>
-                                            ) : (
-                                              <span className="text-gray-500 text-sm font-medium flex items-center gap-1">
-                                                <Trash2 size={16} />
-                                                Processing - Please wait...
-                                              </span>
-                                            )
-                                          )}
-                                        </>
-                                      )}
+                                            )}
+                                          </>
+                                        )}
+                                      </div>
                                     </div>
+
+                                    {/* File List */}
+                                    {(isExpanded || documentFiles.fileCount === 1) && (
+                                      <div className="space-y-2">
+                                        {documentFiles.fileNames.map((fileName, index) => (
+                                          <div key={index} className="flex items-center justify-between p-2 bg-white rounded border">
+                                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                              <FileText size={14} className="text-gray-400 flex-shrink-0" />
+                                              <span className="text-sm text-gray-700 truncate" title={fileName}>
+                                                {fileName}
+                                              </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                              {isDocumentViewable(key, doc) ? (
+                                                <>
+                                                  <a
+                                                    href={`${IMAGE_BASE_URL}${documentFiles.fileUrls[index]}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center gap-1 transition-colors hover:underline"
+                                                  >
+                                                    <Eye size={12} />
+                                                    View
+                                                  </a>
+                                                  {!isApproved && documentFiles.fileCount > 1 && (
+                                                    <button
+                                                      onClick={() => handleDeleteIndividualFile(step.id, doc.id, doc.fileName, index, fileName)}
+                                                      disabled={deletingDocuments[`${step.id}-${doc.id}`]}
+                                                      className="text-red-600 hover:text-red-800 text-xs font-medium flex items-center gap-1 transition-colors hover:bg-red-50 px-1 py-0.5 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                                      title="Delete this file"
+                                                    >
+                                                      <Trash2 size={10} />
+                                                    </button>
+                                                  )}
+                                                </>
+                                              ) : (
+                                                <span className="text-gray-500 text-xs font-medium flex items-center gap-1">
+                                                  <Eye size={12} />
+                                                  Processing...
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {isApproved && (
+                                      <p className="text-sm text-green-700 mt-2 flex items-center gap-1">
+                                        <CheckCircle size={14} />
+                                        Approved - cannot be changed
+                                      </p>
+                                    )}
                                   </div>
-                                  {isApproved && (
-                                    <p className="text-sm text-green-700 mt-2 flex items-center gap-1">
-                                      <CheckCircle size={14} />
-                                      Approved - cannot be changed
-                                    </p>
-                                  )}
-                                </div>
-                              )}
+                                );
+                              })()}
                             </div>
 
                             {/* Upload Section */}
@@ -1177,14 +1306,14 @@ const ApplicationPage: React.FC = () => {
                                         : isUploading
                                           ? "Uploading..."
                                           : dragOver
-                                            ? "Release to drop file"
+                                            ? "Release to drop files"
                                             : hasExistingFile
-                                              ? "Replace existing file"
+                                              ? "Add more files or replace existing"
                                               : wasDeletedLocally
                                                 ? doc.required
-                                                  ? "Required document deleted - Please upload a new file"
-                                                  : "Optional document deleted - Upload a new file if needed"
-                                                : "Drop file here or click to browse"}
+                                                  ? "Required document deleted - Please upload new files"
+                                                  : "Optional document deleted - Upload new files if needed"
+                                                : "Drop files here or click to browse (multiple files supported)"}
                                     </p>
                                     <Input
                                       type="file"
@@ -1200,6 +1329,7 @@ const ApplicationPage: React.FC = () => {
                                       id={`file-input-${step.id}-${doc.id}`}
                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                                       disabled={isUploadDisabled}
+                                      multiple
                                     />
                                     <label
                                       htmlFor={`file-input-${step.id}-${doc.id}`}
@@ -1214,11 +1344,11 @@ const ApplicationPage: React.FC = () => {
                                         : isUploading
                                           ? "Uploading..."
                                           : hasExistingFile
-                                            ? "Replace File"
-                                            : "Choose File"}
+                                            ? "Add More Files"
+                                            : "Choose Files"}
                                     </label>
                                     <p className="text-xs text-gray-500 mt-3">
-                                      PDF, JPG, PNG, DOC (5MB max)
+                                      PDF, JPG, PNG, DOC (2MB max each) - Multiple files supported
                                     </p>
                                   </div>
                                 </div>
@@ -1233,20 +1363,6 @@ const ApplicationPage: React.FC = () => {
                               <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                                 <p className="text-sm text-red-700 font-medium">
                                   {formErrors[`${step.id}-${doc.id}`]}
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Success Messages */}
-                            {uploadedFiles[`${step.id}-${doc.id}`]?.name && (
-                              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                                <p className="text-sm text-green-700 flex items-center gap-2 font-medium">
-                                  <CheckCircle size={16} />
-                                  Successfully uploaded:{" "}
-                                  {uploadedFiles[
-                                    `${step.id}-${doc.id}`
-                                  ].name.substring(0, 30)}
-                                  ...
                                 </p>
                               </div>
                             )}

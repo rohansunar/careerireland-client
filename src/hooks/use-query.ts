@@ -758,7 +758,7 @@ interface Submissiondoc {
   applicationId: string;
   documentId: string;
   documentName: string;
-  file: File | string;
+  files: File[]; // Multiple files support only
   stageOrder: string;
 }
 
@@ -770,14 +770,18 @@ export const useSubmitApplicationDocument = () => {
       applicationId,
       documentName,
       documentId,
-      file,
+      files,
       stageOrder,
     }: Submissiondoc) => {
       const formData = new FormData();
       formData.append("document_name", documentName);
-      formData.append("file", file);
       formData.append("document_id", documentId);
       formData.append("stage_order", stageOrder);
+
+      // Handle multiple files - append each file to FormData
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
 
       const res = await axios.put(
         `${apiUrl}/applications/${applicationId}/document`,
@@ -798,6 +802,7 @@ export const useSubmitApplicationDocument = () => {
  * Hook for deleting application documents
  *
  * This hook provides functionality to delete documents from immigration applications.
+ * Supports both individual file deletion and complete document deletion.
  * Only documents that are not yet approved can be deleted.
  *
  * @return {UseMutationResult} Mutation object with mutate function for document deletion
@@ -820,17 +825,23 @@ export const useDeleteApplicationDocument = () => {
     mutationFn: async ({
       applicationId,
       documentId,
+      fileIndex,
     }: {
       applicationId: string;
       documentId: string;
+      fileIndex?: number; // Optional: for individual file deletion, omit for all files
     }) => {
-      // Send DELETE request to remove document from application
+      // Prepare request body for individual file deletion
+      const requestBody = fileIndex !== undefined ? { fileindex: fileIndex.toString() } : {};
+
+      // Send DELETE request to remove document or specific file from application
       const res = await axios.delete(
         `${apiUrl}/applications/${applicationId}/documents/${documentId}`,
         {
           headers: {
             Authorization: `Bearer ${session?.backendTokens.accessToken}`,
           },
+          data: requestBody, // Include fileindex for individual file deletion
         }
       );
       return res.data;
