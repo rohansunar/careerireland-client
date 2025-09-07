@@ -106,12 +106,7 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({ user }) => {
     return mentorIds.size;
   };
 
-  /**
-   * Handle navigation to Applications page
-   */
-  const handleNavigateToApplications = () => {
-    router.push('/profile/applications');
-  };
+
 
   /**
    * Handle navigation to Services page
@@ -137,13 +132,12 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({ user }) => {
   /**
    * Handle navigation to Immigration Services page
    *
-   * This function navigates users to the main immigration services page
-   * where they can view available immigration packages and services.
-   * Currently unused but kept for future Quick Actions expansion.
+   * This function navigates users to the immigration services tab
+   * where they can view their applications and available services.
    */
-  // const handleNavigateToServices = () => {
-  //   router.push('/visa-service');
-  // };
+  const handleNavigateToImmigrationServices = () => {
+    router.push('/profile?selectedMenu=immigration');
+  };
 
   return (
     <div className="space-y-6">
@@ -211,8 +205,8 @@ const ProfileDashboard: React.FC<ProfileDashboardProps> = ({ user }) => {
           value={totalApplications}
           description="Immigration applications submitted"
           icon={<FileText className="w-6 h-6" />}
-          onClick={handleNavigateToApplications}
-          clickable={totalApplications > 0}
+          onClick={handleNavigateToImmigrationServices}
+          clickable={true}
           bgColor="bg-gradient-to-r from-indigo-50 to-indigo-100"
         />
         {/* <DashboardBox

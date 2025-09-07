@@ -10,10 +10,11 @@ import {
   XCircle,
   FileText,
   Eye,
-  Info,
   Trash2,
   ChevronDown,
   ChevronUp,
+  AlertTriangle,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -144,7 +145,7 @@ const ApplicationPage: React.FC = () => {
   };
 
   // Helper function to get all file information for a document (backend data only)
-  const getDocumentFiles = (key: string, doc: Document) => {
+  const getDocumentFiles = (_key: string, doc: Document) => {
     const backendFiles = doc.fileUrls || [];
     const fileNames = backendFiles.map(extractFileName);
 
@@ -316,7 +317,7 @@ const ApplicationPage: React.FC = () => {
         stageOrder: String(stepId),
       },
       {
-        onSuccess: async (res) => {
+        onSuccess: async () => {
           // Upload successful - refresh backend data instead of local state
 
           // Remove from deleted documents set since we have a new upload
@@ -704,6 +705,7 @@ const ApplicationPage: React.FC = () => {
     documentsRequired: step.documentsRequired,
   }));
 
+  // Enhanced status icon with better visual hierarchy for actionable items
   const statusIcon = (status: ApplicationStatus) => {
     switch (status) {
       case "Draft":
@@ -713,11 +715,11 @@ const ApplicationPage: React.FC = () => {
       case "Under_Review":
         return <FileText size={16} className="text-blue-500" />;
       case "Additional_Info_Required":
-        return <Info size={16} className="text-orange-500" />;
+        return <AlertTriangle size={16} className="text-amber-600" />;
       case "Approved":
         return <CheckCircle size={16} className="text-green-500" />;
       case "Rejected":
-        return <XCircle size={16} className="text-red-500" />;
+        return <AlertCircle size={16} className="text-red-600" />;
       case "Completed":
         return <CheckCircle size={16} className="text-green-600" />;
       case "Cancelled":
@@ -727,6 +729,103 @@ const ApplicationPage: React.FC = () => {
       default:
         return <Clock size={16} className="text-gray-500" />;
     }
+  };
+
+  // Get badge variant for document status with priority for actionable items
+  const getDocumentStatusVariant = (status: ApplicationStatus) => {
+    switch (status) {
+      case "Rejected":
+      case "Additional_Info_Required":
+        return "destructive";
+      case "Approved":
+      case "Completed":
+        return "default";
+      case "Under_Review":
+      case "Submitted":
+        return "secondary";
+      default:
+        return "outline";
+    }
+  };
+
+  // Get enhanced CSS classes for document status badges
+  const getDocumentStatusClassName = (status: ApplicationStatus) => {
+    const baseClasses = "text-sm px-3 py-1 font-medium";
+    switch (status) {
+      case "Rejected":
+        return `${baseClasses} bg-red-100 text-red-800 border-red-200 shadow-sm`;
+      case "Additional_Info_Required":
+        return `${baseClasses} bg-amber-100 text-amber-800 border-amber-200 shadow-sm`;
+      case "Approved":
+        return `${baseClasses} bg-green-100 text-green-800 border-green-200`;
+      case "Completed":
+        return `${baseClasses} bg-green-100 text-green-800 border-green-200`;
+      default:
+        return baseClasses;
+    }
+  };
+
+  // Get user-friendly status text with action indicators
+  const getDocumentStatusText = (status: ApplicationStatus) => {
+    switch (status) {
+      case "Additional_Info_Required":
+        return "⚠️ Revision Required";
+      case "Rejected":
+        return "❌ Rejected - Action Needed";
+      case "Approved":
+        return "✅ Approved";
+      case "Completed":
+        return "✅ Completed";
+      case "Under_Review":
+        return "🔍 Under Review";
+      case "Submitted":
+        return "📤 Submitted";
+      case "Draft":
+        return "📝 Draft";
+      case "On_Hold":
+        return "⏸️ On Hold";
+      case "Cancelled":
+        return "❌ Cancelled";
+      default:
+        return formatStatusText(status);
+    }
+  };
+
+  // Check if document requires immediate user attention
+  const isActionRequired = (status: ApplicationStatus) => {
+    return status === "Rejected" || status === "Additional_Info_Required";
+  };
+
+  // Get priority order for document sorting (actionable items first)
+  const getDocumentPriority = (status: ApplicationStatus) => {
+    switch (status) {
+      case "Rejected":
+        return 1; // Highest priority
+      case "Additional_Info_Required":
+        return 2; // Second priority
+      case "Draft":
+        return 3; // Third priority
+      default:
+        return 4; // Lower priority
+    }
+  };
+
+  // Check if application has any documents requiring action
+  const hasActionableDocuments = () => {
+    return data?.steps?.some((step: any) =>
+      step.documents?.some((doc: any) => isActionRequired(doc.status))
+    ) || false;
+  };
+
+  // Get count of actionable documents
+  const getActionableDocumentCount = () => {
+    let count = 0;
+    data?.steps?.forEach((step: any) => {
+      step.documents?.forEach((doc: any) => {
+        if (isActionRequired(doc.status)) count++;
+      });
+    });
+    return count;
   };
 
   const handleBackToDashboard = () => {
@@ -747,6 +846,28 @@ const ApplicationPage: React.FC = () => {
           Application Details
         </h1>
       </div>
+
+      {/* Action Required Alert Banner */}
+      {hasActionableDocuments() && (
+        <div
+          className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg shadow-sm"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="text-sm font-semibold text-amber-800 mb-1">
+                Action Required
+              </h3>
+              <p className="text-sm text-amber-700">
+                You have {getActionableDocumentCount()} document{getActionableDocumentCount() > 1 ? 's' : ''} that require{getActionableDocumentCount() === 1 ? 's' : ''} your attention.
+                Please review and take action on rejected or revision-required documents below.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Card className="mb-8">
         <CardHeader>
@@ -1085,10 +1206,12 @@ const ApplicationPage: React.FC = () => {
                   );
                 })()}
 
-                {/* Documents */}
+                {/* Documents - Sorted by priority (actionable items first) */}
                 <div className="space-y-4">
                   {step.documents.length > 0 && (
-                    step.documents.map((doc) => {
+                    step.documents
+                      .sort((a, b) => getDocumentPriority(a.status) - getDocumentPriority(b.status))
+                      .map((doc) => {
                     const isApproved = doc.status.charAt(0).toUpperCase() + doc.status.slice(1) === "Approved";
                     const key = `${step.id}-${doc.id}`;
 
@@ -1107,7 +1230,13 @@ const ApplicationPage: React.FC = () => {
                     return (
                       <div
                         key={doc.id}
-                        className="border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:border-gray-300"
+                        className={`border rounded-xl bg-white shadow-sm hover:shadow-lg transition-all duration-300 ${
+                          isActionRequired(doc.status)
+                            ? "border-red-300 bg-red-50/30 hover:border-red-400 ring-1 ring-red-200"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                        role="article"
+                        aria-label={`Document: ${doc.fileName} - Status: ${formatStatusText(doc.status)}`}
                       >
                         <div className="p-6">
                           <div className="flex flex-col lg:flex-row lg:items-start gap-4">
@@ -1142,20 +1271,12 @@ const ApplicationPage: React.FC = () => {
                               <div className="mb-4">
                                 {(doc.fileUrls && doc.fileUrls.length > 0) && (
                                 <Badge
-                                  variant={
-                                    doc.status === "Approved"
-                                      ? "default"
-                                      : doc.status === "Completed"
-                                        ? "secondary"
-                                        : doc.status === "Rejected"
-                                          ? "destructive"
-                                          : doc.status === "Additional_Info_Required"
-                                            ? "destructive"
-                                            : "outline"
-                                  }
-                                  className="text-sm px-3 py-1 font-medium"
+                                  variant={getDocumentStatusVariant(doc.status)}
+                                  className={getDocumentStatusClassName(doc.status)}
+                                  role="status"
+                                  aria-label={`Document status: ${formatStatusText(doc.status)}`}
                                 >
-                                  Review Status: {formatStatusText(doc.status)}
+                                  {getDocumentStatusText(doc.status)}
                                 </Badge>
                                 )}
                               </div>

@@ -30,11 +30,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   selectedMenu,
   setSelectedMenu,
 }) => {
+  /**
+   * Handle user logout
+   * Signs out the user and redirects to home page
+   */
   const handleLogout = async () => {
     try {
       await signOut({ callbackUrl: "/" });
     } catch (error) {
-      console.error("Logout error:", error);
+      // Silently handle logout errors in production
     }
   };
 
