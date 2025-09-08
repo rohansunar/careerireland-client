@@ -6,8 +6,32 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import revalidateTag from "@/util/revalidate-tag";
 import { failed, success } from "@/util/tools";
+import { useCallback } from "react";
 
 // ..................Auth...................................
+
+/**
+ * Enhanced session error handler hook
+ * Detects 401 errors and triggers automatic logout with user-friendly messages
+ * @return {Function} Error handler function that returns boolean indicating if session error was handled
+ */
+export const useSessionErrorHandler = () => {
+  return useCallback(async (error: any) => {
+    // Check if error is 401 (Unauthorized) or session-related
+    if (error?.response?.status === 401 || error?.status === 401) {
+      // Show user-friendly session expiry message
+      toast.error("Your session has expired. Please log in again.", {
+        description: "You will be redirected to the login page.",
+        ...failed,
+      });
+
+      // Sign out user and redirect to login
+      await signOut({ callbackUrl: "/auth/login" });
+      return true; // Indicates session error was handled
+    }
+    return false; // Not a session error
+  }, []);
+};
 
 export const useSignUp = () => {
   const router = useRouter();
@@ -676,35 +700,65 @@ export const useComment = () => {
 // for fetch applications in immigration
 export const useImmApplication = () => {
   const { data: session } = useSession();
+  const handleSessionError = useSessionErrorHandler();
 
   return useQuery({
     queryKey: ["immigration-applications"],
     queryFn: async () => {
-      const res = await axios.get(`${apiUrl}/applications`, {
-        headers: {
-          Authorization: `Bearer ${session?.backendTokens.accessToken}`,
-        },
-      });
-      return res.data;
+      try {
+        const res = await axios.get(`${apiUrl}/applications`, {
+          headers: {
+            Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+          },
+        });
+        return res.data;
+      } catch (error) {
+        // Handle session errors automatically
+        const isSessionError = await handleSessionError(error);
+        if (!isSessionError) {
+          throw error; // Re-throw non-session errors
+        }
+        return null; // Return null for session errors
+      }
     },
     enabled: !!session?.backendTokens?.accessToken, // only fetch after session is ready
+    retry: (failureCount, error: any) => {
+      // Don't retry on 401 errors (session expired)
+      if (error?.response?.status === 401) return false;
+      return failureCount < 3;
+    },
   });
 };
 
 export const useImmApplicationId = (id: string | undefined) => {
   const { data: session } = useSession();
+  const handleSessionError = useSessionErrorHandler();
 
   return useQuery({
     queryKey: ["immigration-applications", id],
     queryFn: async () => {
-      const res = await axios.get(`${apiUrl}/applications/${id}`, {
-        headers: {
-          Authorization: `Bearer ${session?.backendTokens.accessToken}`,
-        },
-      });
-      return res.data;
+      try {
+        const res = await axios.get(`${apiUrl}/applications/${id}`, {
+          headers: {
+            Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+          },
+        });
+        return res.data;
+      } catch (error) {
+        // Handle session errors automatically
+        const isSessionError = await handleSessionError(error);
+        if (!isSessionError) {
+          throw error; // Re-throw non-session errors
+        }
+        return null; // Return null for session errors
+      }
     },
     enabled: !!session?.backendTokens?.accessToken && !!id,
+    retry: (failureCount, error: any) => {
+      // Don't retry on 401 errors (session expired)
+      if (error?.response?.status === 401) return false;
+      return failureCount < 3;
+    },
   });
 };
 
@@ -852,21 +906,39 @@ export const useDeleteApplicationDocument = () => {
 // Documents API Hook
 export const useDocuments = (page: number = 1, limit: number = 50) => {
   const { data: session } = useSession();
+  const handleSessionError = useSessionErrorHandler();
 
   return useQuery({
     queryKey: ["documents", page, limit],
     queryFn: async (): Promise<IDocumentResponse> => {
-      const res = await axios.get(`${apiUrl}/documents`, {
-        params: { page, limit },
-        headers: {
-          Authorization: `Bearer ${session?.backendTokens.accessToken}`,
-        },
-      });
-      return res.data;
+      try {
+        const res = await axios.get(`${apiUrl}/documents`, {
+          params: { page, limit },
+          headers: {
+            Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+          },
+        });
+        return res.data;
+      } catch (error) {
+        // Handle session errors automatically
+        const isSessionError = await handleSessionError(error);
+        if (!isSessionError) {
+          throw error; // Re-throw non-session errors
+        }
+        return {
+          status: "error",
+          data: [],
+          pagination: { page: 1, limit: 50, total: 0, totalPages: 0 }
+        }; // Return empty data for session errors
+      }
     },
     enabled: !!session?.backendTokens?.accessToken,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 3,
+    retry: (failureCount, error: any) => {
+      // Don't retry on 401 errors (session expired)
+      if (error?.response?.status === 401) return false;
+      return failureCount < 3;
+    },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };

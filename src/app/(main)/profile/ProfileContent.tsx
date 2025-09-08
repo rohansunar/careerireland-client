@@ -9,6 +9,7 @@ import { MenuKey } from "./components/types";
 import { Sidebar } from "./components/Sidebar";
 import { useQuery } from "@tanstack/react-query";
 import { apiUrl } from "@/util/urls";
+import { useSessionErrorHandler } from "@/hooks/use-query";
 
 // Lazy imports with explicit typing
 const ProfileDashboard = lazy(
@@ -63,12 +64,13 @@ const ProfileContent: React.FC = () => {
   const { data: session } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [selectedMenu, setSelectedMenu] = useState<MenuKey>("dashboard");
+  const handleSessionError = useSessionErrorHandler();
 
   // Check if we're viewing a single application page - hide ProfileContent sidebar
   const isOnApplicationPage = pathname.includes('/profile/application/');
 
-  // Fetch real user profile data
-  const { data: userProfile, isLoading, isError } = useQuery({
+  // Fetch real user profile data with enhanced session error handling
+  const { data: userProfile, isLoading, isError, error } = useQuery({
     queryKey: ["user-profile"],
     queryFn: async () => {
       const res = await fetch(`${apiUrl}/user`, {
@@ -77,11 +79,17 @@ const ProfileContent: React.FC = () => {
         },
       });
       if (!res.ok) {
-        throw new Error('Failed to fetch user profile');
+        const errorData = { status: res.status, statusText: res.statusText };
+        throw errorData;
       }
       return res.json() as Promise<IProfile>;
     },
     enabled: !!session?.backendTokens?.accessToken,
+    retry: (failureCount, error: any) => {
+      // Don't retry on 401 errors (session expired)
+      if (error?.status === 401) return false;
+      return failureCount < 3;
+    },
   });
 
   // Handle URL parameters for navigation
@@ -115,14 +123,30 @@ const ProfileContent: React.FC = () => {
     );
   }
 
+  // Handle errors with session-aware logic
   if (isError || !userProfile) {
+    // Check if this is a session-related error
+    const isSessionError = handleSessionError(error);
+
+    if (!isSessionError) {
+      // Show generic error for non-session issues
+      return (
+        <div className="flex min-h-screen bg-gray-50">
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Profile</h2>
+              <p className="text-gray-600">Please try refreshing the page or contact support if the issue persists.</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // For session errors, show loading while redirecting
     return (
       <div className="flex min-h-screen bg-gray-50">
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Profile</h2>
-            <p className="text-gray-600">Please try refreshing the page or contact support if the issue persists.</p>
-          </div>
+          <LoadingSpinner text="Session expired. Redirecting to login..." />
         </div>
       </div>
     );

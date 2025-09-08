@@ -7,14 +7,15 @@ import { useDocuments } from "@/hooks/use-query";
 
 import {
   FileText,
-  Download,
   Eye,
   Calendar,
   Shield,
   FolderOpen,
   Search,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -72,26 +73,29 @@ const DocumentVault: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory>("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage] = useState(1);
+  const [expandedDocs, setExpandedDocs] = useState<Set<string>>(new Set());
   const pageLimit = 50;
 
   // Fetch documents from API
   const { data: documentsResponse, isLoading, error, refetch } = useDocuments(currentPage, pageLimit);
 
-  // Transform API data to display format
+  // Transform API data to display format and filter documents with valid file_paths
   const transformedDocs = useMemo(() => {
     if (!documentsResponse?.data) return [];
 
-    return documentsResponse.data.map((doc: IDocument) => ({
-      id: doc.id,
-      category: mapDocumentCategory(doc.document_category),
-      type: doc.document_type,
-      name: doc.original_filename || doc.document_name,
-      uploadedAt: new Date(doc.uploaded_at),
-      expiryDate: doc.expiry_date ? new Date(doc.expiry_date) : undefined,
-      fileSize: formatFileSize(doc.file_size),
-      filePath: doc.file_path,
-      uploadedBy: doc.uploaded_by,
-    }));
+    return documentsResponse.data
+      .filter((doc: IDocument) => doc.file_paths && doc.file_paths.length > 0) // Only include documents with valid file_paths
+      .map((doc: IDocument) => ({
+        id: doc.id,
+        category: mapDocumentCategory(doc.document_category),
+        type: doc.document_type,
+        name: doc.document_name || doc.original_filename, // Display document_name instead of original_filename
+        uploadedAt: new Date(doc.uploaded_at),
+        expiryDate: doc.expiry_date ? new Date(doc.expiry_date) : undefined,
+        fileSize: formatFileSize(doc.file_size),
+        filePaths: doc.file_paths, // Changed from filePath to filePaths array
+        uploadedBy: doc.uploaded_by,
+      }));
   }, [documentsResponse?.data]);
 
   // Filter documents based on category and search term
@@ -112,6 +116,37 @@ const DocumentVault: React.FC = () => {
     "Educational Documents",
     "Immigration Documents"
   ];
+
+  // Helper functions for expandable file lists
+  const toggleDocExpansion = (docId: string) => {
+    setExpandedDocs(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(docId)) {
+        newSet.delete(docId);
+      } else {
+        newSet.add(docId);
+      }
+      return newSet;
+    });
+  };
+
+  const isDocExpanded = (docId: string) => expandedDocs.has(docId);
+
+  /**
+   * Handle individual file view functionality
+   * Opens file in new tab for viewing
+   * @param {string} filePath - The file path to view
+   * @param {string} fileName - The file name for display
+   */
+  const handleFileView = (filePath: string, fileName: string) => {
+    try {
+      // Open file in new tab - implementation depends on backend file serving
+      window.open(filePath, '_blank');
+    } catch (error) {
+      console.error('Error opening file:', error);
+      // Could add toast notification here for user feedback
+    }
+  };
 
   // Error state
   if (error) {
@@ -249,7 +284,9 @@ const DocumentVault: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Category & Type
                   </th>
-
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Files
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Details
                   </th>
@@ -260,60 +297,108 @@ const DocumentVault: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredDocs.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-gray-50 transition-colors">
-                    {/* Document Info */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0">
-                          <FileText className="w-4 h-4 text-gray-400" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{doc.name}</div>
-                          <div className="text-sm text-gray-500">
-                            {doc.fileSize}
+                  <React.Fragment key={doc.id}>
+                    <tr className="hover:bg-gray-50 transition-colors">
+                      {/* Document Info */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">
+                            <FileText className="w-4 h-4 text-gray-400" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{doc.name}</div>
+                            <div className="text-sm text-gray-500">
+                              {doc.fileSize}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Category & Type */}
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col gap-1">
+                      {/* Category & Type */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            {getCategoryIcon(doc.category)}
+                            <span className="text-sm font-medium text-gray-900">{doc.category}</span>
+                          </div>
+                          <span className="text-sm text-gray-500">{doc.type}</span>
+                        </div>
+                      </td>
+
+                      {/* Files - Expandable List */}
+                      <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          {getCategoryIcon(doc.category)}
-                          <span className="text-sm font-medium text-gray-900">{doc.category}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleDocExpansion(doc.id)}
+                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                          >
+                            {isDocExpanded(doc.id) ? (
+                              <ChevronDown className="w-4 h-4" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
+                            {doc.filePaths.length} file{doc.filePaths.length !== 1 ? 's' : ''}
+                          </Button>
                         </div>
-                        <span className="text-sm text-gray-500">{doc.type}</span>
-                      </div>
-                    </td>
+                      </td>
 
-
-
-                    {/* Details */}
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        <div className="flex items-center gap-1 mb-1">
-                          <Calendar className="w-3 h-3 text-gray-400" />
-                          <span className="text-gray-500">Uploaded:</span> {doc.uploadedAt.toLocaleDateString()}
+                      {/* Details */}
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          <div className="flex items-center gap-1 mb-1">
+                            <Calendar className="w-3 h-3 text-gray-400" />
+                            <span className="text-gray-500">Uploaded:</span> {doc.uploadedAt.toLocaleDateString()}
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Actions */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="flex items-center gap-1">
-                          <Eye className="w-3 h-3" />
-                          View
-                        </Button>
-                        <Button variant="outline" size="sm" className="flex items-center gap-1">
-                          <Download className="w-3 h-3" />
-                          Download
-                        </Button>
+                      {/* Actions - Individual File View Only */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-500">
+                            View files individually below
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
 
-                      </div>
-                    </td>
-                  </tr>
+                    {/* Expandable File List Row with Individual View Buttons */}
+                    {isDocExpanded(doc.id) && (
+                      <tr className="bg-gray-50">
+                        <td colSpan={5} className="px-6 py-3">
+                          <div className="ml-8">
+                            <div className="text-sm font-medium text-gray-700 mb-3">Files in this document:</div>
+                            <div className="space-y-2">
+                              {doc.filePaths.map((filePath, index) => {
+                                const fileName = filePath.split('/').pop() || filePath;
+                                return (
+                                  <div key={index} className="flex items-center justify-between bg-white p-3 rounded border">
+                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                      <FileText className="w-4 h-4 text-gray-400" />
+                                      <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                                        {fileName}
+                                      </span>
+                                    </div>
+                                    {/* <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleFileView(filePath, fileName)}
+                                      className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                                    >
+                                      <Eye className="w-3 h-3" />
+                                      View
+                                    </Button> */}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>

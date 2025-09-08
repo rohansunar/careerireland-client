@@ -6,13 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Clock, CheckCircle, XCircle, FileText } from "lucide-react";
 
+interface CaseStep {
+  stageOrder: number;
+  stageName: string;
+  documentsRequired: boolean;
+  customFormRequired: boolean;
+}
+
 interface Case {
   id: string;
   application_number: string;
   service_type: string;
-  status?: string;
-  current_step?: string;
-  numberOfSteps?: number;
+  status?: string; // Backend status field
+  current_stage_name?: string; // New field from API response
+  steps?: CaseStep[]; // Backend steps array with stage names
   created_at: string;
   updated_at: string;
   service_name: string,
@@ -29,31 +36,53 @@ interface CasesTableProps {
   onPageChange: (page: number) => void;
 }
 
-const getStatusBadgeClass = (status?: string) => {
-  switch (status?.toLowerCase()) {
+
+
+/**
+ * Get badge class for backend application status
+ * Uses actual backend status instead of frontend derivation
+ * @param {string} status - The backend application status
+ * @return {string} CSS classes for status badge
+ */
+const getBackendStatusBadgeClass = (status?: string) => {
+  if (!status) return "bg-gray-100 text-gray-800 border-gray-200";
+
+  switch (status.toLowerCase()) {
     case "draft":
       return "bg-gray-100 text-gray-800 border-gray-200";
     case "submitted":
       return "bg-blue-100 text-blue-800 border-blue-200";
-    case "in review":
+    case "under_review":
       return "bg-yellow-100 text-yellow-800 border-yellow-200";
     case "approved":
       return "bg-green-100 text-green-800 border-green-200";
     case "rejected":
       return "bg-red-100 text-red-800 border-red-200";
+    case "completed":
+      return "bg-green-100 text-green-800 border-green-200";
     default:
       return "bg-gray-100 text-gray-800 border-gray-200";
   }
 };
 
-const getStatusIcon = (status?: string) => {
-  switch (status?.toLowerCase()) {
+/**
+ * Get icon for backend application status
+ * Uses actual backend status instead of frontend derivation
+ * @param {string} status - The backend application status
+ * @return {JSX.Element} React icon component for status
+ */
+const getBackendStatusIcon = (status?: string) => {
+  if (!status) return <Clock className="w-4 h-4" />;
+
+  switch (status.toLowerCase()) {
     case "draft":
-    case "submitted":
       return <FileText className="w-4 h-4" />;
-    case "in review":
+    case "submitted":
+      return <CheckCircle className="w-4 h-4" />;
+    case "under_review":
       return <Clock className="w-4 h-4" />;
     case "approved":
+    case "completed":
       return <CheckCircle className="w-4 h-4" />;
     case "rejected":
       return <XCircle className="w-4 h-4" />;
@@ -62,45 +91,14 @@ const getStatusIcon = (status?: string) => {
   }
 };
 
-// New functions for application status logic
-const getApplicationStatus = (currentStep?: string, numberOfSteps?: number): "Completed" | "Pending" => {
-  // Handle missing or invalid data
-  if (!currentStep || !numberOfSteps || numberOfSteps <= 0) {
-    return "Pending";
-  }
-
-  // Convert currentStep to number with proper validation
-  const currentStepNum = parseInt(currentStep, 10);
-
-  // Handle invalid parseInt result
-  if (isNaN(currentStepNum) || currentStepNum <= 0) {
-    return "Pending";
-  }
-
-  // Compare current step with total steps
-  return currentStepNum >= numberOfSteps ? "Completed" : "Pending";
-};
-
-const getApplicationStatusBadgeClass = (status: "Completed" | "Pending") => {
-  switch (status) {
-    case "Completed":
-      return "bg-green-100 text-green-800 border-green-200";
-    case "Pending":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
-  }
-};
-
-const getApplicationStatusIcon = (status: "Completed" | "Pending") => {
-  switch (status) {
-    case "Completed":
-      return <CheckCircle className="w-4 h-4" />;
-    case "Pending":
-      return <Clock className="w-4 h-4" />;
-    default:
-      return <Clock className="w-4 h-4" />;
-  }
+/**
+ * Get display text for current stage
+ * Uses new current_stage_name field from API response
+ * @param {string} currentStageName - The current stage name from API
+ * @return {string} The stage name or fallback text
+ */
+const getCurrentStageDisplay = (currentStageName?: string) => {
+  return currentStageName || "Not Started";
 };
 
 
@@ -139,6 +137,7 @@ const CasesTable: React.FC<CasesTableProps> = ({
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Application</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Package</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current Stage</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timeline</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
           </tr>
@@ -156,27 +155,40 @@ const CasesTable: React.FC<CasesTableProps> = ({
                 {c.service_name && (
                   <Badge
                     variant="outline"
-                    className={`w-fit text-xs flex items-center gap-1 ${getStatusBadgeClass(c.service_name)}`}
+                    className="w-fit text-xs flex items-center gap-1 bg-blue-100 text-blue-800 border-blue-200"
                   >
-                    {getStatusIcon(c.service_name)}
+                    <FileText className="w-4 h-4" />
                     {c.service_name}
                   </Badge>
                 )}
               </td>
 
               <td className="px-6 py-4">
-                {(() => {
-                  const applicationStatus = getApplicationStatus(c.current_step, c.numberOfSteps);
-                  return (
-                    <Badge
-                      variant="outline"
-                      className={`w-fit text-xs flex items-center gap-1 ${getApplicationStatusBadgeClass(applicationStatus)}`}
-                    >
-                      {getApplicationStatusIcon(applicationStatus)}
-                      {applicationStatus}
-                    </Badge>
-                  );
-                })()}
+                {c.status ? (
+                  <Badge
+                    variant="outline"
+                    className={`w-fit text-xs flex items-center gap-1 ${getBackendStatusBadgeClass(c.status)}`}
+                  >
+                    {getBackendStatusIcon(c.status)}
+                    {c.status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="w-fit text-xs flex items-center gap-1 bg-gray-100 text-gray-800 border-gray-200"
+                  >
+                    <Clock className="w-4 h-4" />
+                    Pending
+                  </Badge>
+                )}
+              </td>
+
+              <td className="px-6 py-4">
+                <div className="text-sm">
+                  <span className="font-medium text-gray-900">
+                    {getCurrentStageDisplay(c.current_stage_name)}
+                  </span>
+                </div>
               </td>
 
               <td className="px-6 py-4">

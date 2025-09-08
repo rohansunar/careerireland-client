@@ -5,6 +5,165 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.4] - 2025-09-08
+
+### 🚀 Document Vault & Application Records Updates
+
+- **Document Vault Enhancements**: Updated Document Vault display and functionality for improved user experience
+  - **Display Field Update**: Changed Document Vault to display `document_name` instead of `original_filename` in document list
+  - **Individual File View**: Implemented functional view buttons for each individual file within expandable file lists
+  - **Enhanced File Management**: Removed overall document view button and added file-level view actions
+  - **Improved User Experience**: Users can now view individual files directly from the expandable file lists
+
+- **Application Records Table Updates**: Updated to handle new API response structure and remove legacy fields
+  - **API Response Integration**: Updated to work with new `/applications` endpoint structure
+  - **Current Stage Display**: Now displays "Current Stage" using new `current_stage_name` field from API response
+  - **Legacy Field Removal**: Removed references to deprecated `current_step` and `numberOfSteps` fields
+  - **Simplified Stage Logic**: Replaced complex stage derivation with direct backend field display
+
+### 🛠️ Technical Implementation
+
+#### Document Vault Features:
+- **Display Logic**: Updated `transformedDocs` to prioritize `document_name` over `original_filename`
+- **File View Functionality**: Added `handleFileView` function for individual file viewing (10-15 lines)
+- **Enhanced File Lists**: Individual view buttons for each file in expandable lists with proper file name extraction
+- **UI Improvements**: Replaced generic "View files individually below" message with functional file-level actions
+
+#### Application Records Features:
+- **API Integration**: Updated `Case` interface to include `current_stage_name` field and remove legacy fields
+- **Stage Display**: Replaced `getCurrentStageName` function with simplified `getCurrentStageDisplay` (10-15 lines)
+- **Table Structure**: Updated table display to show current stage name directly from backend response
+- **Test Updates**: Updated test cases to reflect new API structure and field names
+
+### 🔧 Files Modified
+
+#### Document Vault:
+- `src/app/(main)/profile/components/DocumentVault.tsx` - Enhanced display logic and individual file view functionality
+
+#### Application Records:
+- `src/app/(main)/profile/components/CasesTable.tsx` - Updated API integration and stage display logic
+- `src/app/(main)/profile/components/__tests__/CasesTable.test.tsx` - Updated test cases for new API structure
+
+### 🧪 Quality Assurance
+
+- **Build Verification**: Successful compilation with `npm run build`
+- **Development Server**: Verified functionality with `npm run dev` on localhost:3003
+- **TypeScript Compliance**: All type definitions updated for new API structure
+- **Code Quality**: Maintained 10-15 line function limits for all helper functions
+- **API Compatibility**: Updated to work with new backend API response structure
+
+### 🎯 User Experience Improvements
+
+- **Document Management**: Users can now view individual files directly with dedicated view buttons
+- **File Organization**: Clear file names displayed with functional view actions for each file
+- **Application Tracking**: Current stage information now comes directly from backend for accuracy
+- **Simplified Interface**: Removed complex frontend derivation logic in favor of backend data display
+
+## [0.8.3] - 2025-09-08
+
+### 🚀 Document Vault API Integration Updates
+
+- **Enhanced Document Vault**: Updated Document Vault to handle new API structure with multiple file paths per document
+  - **API Integration**: Updated to work with new `/documents` endpoint returning `file_paths` as array instead of single `file_path` string
+  - **Document Filtering**: Only display documents that have valid `file_paths` values (non-empty arrays)
+  - **Expandable File Lists**: Implemented collapsible/expandable file list for each document showing all files from `file_paths` array
+  - **UI Improvements**: Removed download button and enhanced table structure with dedicated "Files" column
+  - **Responsive Design**: Maintained existing design patterns with improved file organization display
+
+### 🛠️ Technical Implementation
+
+#### API Structure Changes:
+- **IDocument Interface**: Updated `file_path: string` to `file_paths: string[]` in TypeScript definitions
+- **Data Filtering**: Added filtering logic to exclude documents with empty or null `file_paths` arrays
+- **Transformation Logic**: Enhanced `transformedDocs` to handle array-based file paths
+
+#### UI/UX Enhancements:
+- **Expandable File Lists**: Added toggle functionality with chevron icons to show/hide file lists
+- **File Display**: Each file path displayed with filename extraction and monospace formatting
+- **Table Structure**: Added dedicated "Files" column showing file count with expand/collapse controls
+- **Action Simplification**: Removed download button, keeping only "View" action for cleaner interface
+
+### 🔧 Files Modified
+
+- `types/types.d.ts` - Updated IDocument interface to use `file_paths: string[]` instead of `file_path: string`
+- `src/app/(main)/profile/components/DocumentVault.tsx` - Complete Document Vault component update:
+  - Added expandable file list functionality with state management
+  - Updated data transformation to filter documents with valid file_paths
+  - Removed download button and enhanced table structure
+  - Implemented collapsible file display with proper responsive design
+
+### 🧪 Quality Assurance
+
+- **Build Verification**: Successful compilation with `npm run build`
+- **Development Server**: Verified functionality with `npm run dev` on localhost:3002
+- **TypeScript Compliance**: All type definitions updated and validated
+- **Code Quality**: Maintained 10-15 line function limits for helper functions
+- **Responsive Design**: Ensured expandable lists work across all screen sizes
+
+### 🎯 User Experience Improvements
+
+- **Document Organization**: Users can now see all files associated with each document in an organized, expandable view
+- **File Management**: Clear display of multiple files per document with easy expand/collapse functionality
+- **Simplified Actions**: Streamlined interface by removing download functionality as requested
+- **Visual Clarity**: Enhanced table structure with dedicated file count display and intuitive expand/collapse controls
+
+## [0.8.2] - 2025-09-08
+
+### 🚀 Major Features - Enhanced Session Management & Application Records
+
+- **Enhanced Session Management**: Implemented comprehensive session expiry handling with automatic logout and user-friendly notifications
+  - Automatic logout on 401 status codes from backend API calls
+  - User-friendly session expiry dialog with login prompt
+  - Session-aware error handling across all API endpoints
+  - Replaced generic "Error Loading Profile" with proper session management
+
+- **Application Records Table Updates**: Updated application records to display actual backend data instead of frontend-derived status
+  - Display actual backend application status (Draft, Submitted, Under Review, Approved, etc.)
+  - Show application stage names from backend instead of step numbers
+  - Removed all frontend status derivation logic
+  - Enhanced table with "Current Stage" column showing meaningful stage names
+
+### 🛠️ Technical Implementation
+
+#### Session Management Features:
+- **useSessionErrorHandler Hook**: Centralized session error detection and handling
+- **SessionExpiryDialog Component**: User-friendly dialog for session expiry notifications
+- **Enhanced API Hooks**: Updated `useImmApplication`, `useImmApplicationId`, and `useDocuments` with session error handling
+- **Automatic Logout**: Seamless redirect to login page on session expiry
+
+#### Application Records Features:
+- **Backend Status Display**: Shows actual status from backend API (Draft, Submitted, Under Review, Approved, Rejected, Completed)
+- **Stage Name Display**: Current stage shows meaningful names like "Initial Application", "Document Review", "Processing"
+- **Enhanced Table Structure**: Added "Current Stage" column with stage names and step progress
+- **Removed Frontend Derivation**: Eliminated `getApplicationStatus`, `getApplicationStatusBadgeClass`, and `getApplicationStatusIcon` functions
+
+### 🔧 Files Modified
+
+#### Session Management:
+- `src/hooks/use-query.ts` - Added `useSessionErrorHandler` hook and enhanced API hooks with session error handling
+- `src/app/(main)/profile/ProfileContent.tsx` - Updated to use session-aware error handling
+- `src/components/common/session-expiry-dialog.tsx` - New component for session expiry notifications
+
+#### Application Records:
+- `src/app/(main)/profile/components/CasesTable.tsx` - Updated to display backend status and stage names
+- `src/app/(main)/profile/components/ImmigrationDashboard.tsx` - Enhanced data processing for backend compatibility
+- `src/app/(main)/profile/components/__tests__/CasesTable.test.tsx` - Updated tests for new backend data structure
+
+### 🧪 Quality Assurance
+
+- **Build Verification**: Successful compilation with `npm run build`
+- **Development Server**: Verified functionality with `npm run dev`
+- **TypeScript Compliance**: All type definitions updated for backend data structures
+- **JSDoc Documentation**: Comprehensive function documentation with proper parameter and return types
+- **Code Quality**: Maintained 10-15 line function limits and removed console.log statements
+
+### 🎯 User Experience Improvements
+
+- **Session Expiry**: Users receive clear notifications when sessions expire with easy login access
+- **Application Status**: Users see actual application status instead of generic "Pending/Completed" labels
+- **Stage Progress**: Users can see meaningful stage names like "Document Review" instead of "Step 2 of 5"
+- **Error Handling**: Improved error messages with session-aware context
+
 ## [0.8.1] - 2025-09-07
 
 ### 🐛 Bug Fixes - Immigration Services Navigation

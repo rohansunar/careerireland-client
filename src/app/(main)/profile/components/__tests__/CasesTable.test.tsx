@@ -20,9 +20,15 @@ const mockCases = [
     application_number: "APP001",
     service_type: "Dependent Visas",
     status: "Draft",
-    current_step: "1",
-    numberOfSteps: 5,
+    current_stage_name: "Initial Application",
     service_name: "Dependent Visas",
+    steps: [
+      { stageOrder: 1, stageName: "Initial Application", documentsRequired: true, customFormRequired: false },
+      { stageOrder: 2, stageName: "Document Review", documentsRequired: false, customFormRequired: true },
+      { stageOrder: 3, stageName: "Processing", documentsRequired: false, customFormRequired: false },
+      { stageOrder: 4, stageName: "Decision", documentsRequired: false, customFormRequired: false },
+      { stageOrder: 5, stageName: "Completion", documentsRequired: false, customFormRequired: false },
+    ],
     created_at: "2025-05-01T00:00:00Z",
     updated_at: "2025-05-15T00:00:00Z",
     user: {
@@ -35,9 +41,14 @@ const mockCases = [
     application_number: "APP002",
     service_type: "Stamp Extensions",
     status: "Submitted",
-    current_step: "2",
-    numberOfSteps: 4,
+    current_stage_name: "Review Process",
     service_name: "Stamp Extensions",
+    steps: [
+      { stageOrder: 1, stageName: "Application Submission", documentsRequired: true, customFormRequired: false },
+      { stageOrder: 2, stageName: "Review Process", documentsRequired: false, customFormRequired: true },
+      { stageOrder: 3, stageName: "Final Review", documentsRequired: false, customFormRequired: false },
+      { stageOrder: 4, stageName: "Approval", documentsRequired: false, customFormRequired: false },
+    ],
     created_at: "2025-04-10T00:00:00Z",
     updated_at: "2025-05-10T00:00:00Z",
     user: {
@@ -53,6 +64,11 @@ const mockCases = [
     current_step: "3",
     numberOfSteps: 3,
     service_name: "Work Permit Applications",
+    steps: [
+      { stageOrder: 1, stageName: "Initial Review", documentsRequired: true, customFormRequired: false },
+      { stageOrder: 2, stageName: "Background Check", documentsRequired: false, customFormRequired: true },
+      { stageOrder: 3, stageName: "Final Decision", documentsRequired: false, customFormRequired: false },
+    ],
     created_at: "2025-04-10T00:00:00Z",
     updated_at: "2025-05-10T00:00:00Z",
     user: {
@@ -65,9 +81,14 @@ const mockCases = [
     application_number: "APP004",
     service_type: "Citizenship Applications",
     status: "Approved",
-    current_step: "4",
-    numberOfSteps: 4,
+    current_stage_name: "Final Approval",
     service_name: "Citizenship Applications",
+    steps: [
+      { stageOrder: 1, stageName: "Eligibility Check", documentsRequired: true, customFormRequired: false },
+      { stageOrder: 2, stageName: "Document Verification", documentsRequired: false, customFormRequired: true },
+      { stageOrder: 3, stageName: "Interview Process", documentsRequired: false, customFormRequired: false },
+      { stageOrder: 4, stageName: "Final Approval", documentsRequired: false, customFormRequired: false },
+    ],
     created_at: "2025-03-15T00:00:00Z",
     updated_at: "2025-05-20T00:00:00Z",
     user: {
@@ -151,15 +172,23 @@ describe("CasesTable", () => {
     expect(screen.queryByText("APP001")).not.toBeInTheDocument();
   });
 
-  it("applies correct status styling", () => {
+  it("displays backend status correctly", () => {
     render(<CasesTable {...defaultProps} />);
 
-    // Check for application status badges
-    const pendingStatuses = screen.getAllByText("Pending");
-    const completedStatuses = screen.getAllByText("Completed");
+    // Check for backend status badges (formatted from backend status)
+    expect(screen.getByText("Draft")).toBeInTheDocument();
+    expect(screen.getByText("Submitted")).toBeInTheDocument();
+    expect(screen.getByText("Under Review")).toBeInTheDocument();
+    expect(screen.getByText("Approved")).toBeInTheDocument();
+  });
 
-    expect(pendingStatuses).toHaveLength(2); // First two cases are pending
-    expect(completedStatuses).toHaveLength(2); // Third and fourth cases are completed
+  it("displays current stage names correctly", () => {
+    render(<CasesTable {...defaultProps} />);
+
+    // Check for current stage names from backend current_stage_name field
+    expect(screen.getByText("Initial Application")).toBeInTheDocument();
+    expect(screen.getByText("Review Process")).toBeInTheDocument();
+    expect(screen.getByText("Final Approval")).toBeInTheDocument();
   });
 
   it("has proper table structure", () => {

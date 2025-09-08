@@ -260,7 +260,7 @@ interface IDocument {
   original_filename: string;
   document_type: string;
   document_category: string;
-  file_path: string;
+  file_paths: string[]; // Changed from file_path (string) to file_paths (array)
   file_size: number;
   user_id: string;
   guest_email: string | null;

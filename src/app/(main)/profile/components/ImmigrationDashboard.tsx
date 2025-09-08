@@ -17,10 +17,12 @@ const ITEMS_PER_PAGE = 5;
 const ImmigrationDashboard: React.FC = () => {
   const { data } = useImmApplication();
 
-  // Process cases to ensure numberOfSteps field is correctly mapped
+  // Process cases to include backend status and steps data
   const sampleCases = (data?.data || []).map((caseItem: any) => ({
     ...caseItem,
-    // Priority: 1) Backend numberOfSteps, 2) Calculate from steps array, 3) Default to 5
+    // Ensure steps array is available for stage name display
+    steps: caseItem.steps || [],
+    // Keep numberOfSteps for backward compatibility
     numberOfSteps: caseItem.numberOfSteps ||
                    (caseItem.steps ? caseItem.steps.length : 5),
   }));
