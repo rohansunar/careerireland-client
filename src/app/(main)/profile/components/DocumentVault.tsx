@@ -7,7 +7,7 @@ import { useDocuments } from "@/hooks/use-query";
 
 import {
   FileText,
-  Eye,
+  // Eye,
   Calendar,
   Shield,
   FolderOpen,
@@ -138,15 +138,15 @@ const DocumentVault: React.FC = () => {
    * @param {string} filePath - The file path to view
    * @param {string} fileName - The file name for display
    */
-  const handleFileView = (filePath: string, fileName: string) => {
-    try {
-      // Open file in new tab - implementation depends on backend file serving
-      window.open(filePath, '_blank');
-    } catch (error) {
-      console.error('Error opening file:', error);
-      // Could add toast notification here for user feedback
-    }
-  };
+  // const handleFileView = (filePath: string, fileName: string) => {
+  //   try {
+  //     // Open file in new tab - implementation depends on backend file serving
+  //     window.open(filePath, '_blank');
+  //   } catch (error) {
+  //     console.error('Error opening file:', error);
+  //     // Could add toast notification here for user feedback
+  //   }
+  // };
 
   // Error state
   if (error) {
