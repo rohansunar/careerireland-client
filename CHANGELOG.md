@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.5] - 2025-09-22
+
+### 🚀 Mandatory Form Saving Implementation
+
+- **Form Change Detection System**: Implemented comprehensive change tracking for all form fields to prevent data loss
+  - **Real-time Change Tracking**: Added state management to monitor modifications in text inputs, selects, textareas, checkboxes, and radio buttons
+  - **Original Value Comparison**: Maintains original form data for accurate change detection across all application steps
+  - **Memory Leak Prevention**: Proper cleanup of state and event listeners to prevent memory issues
+
+- **Navigation Blocking Logic**: Enhanced user experience with mandatory save requirements before stage progression
+  - **Unsaved Changes Detection**: Intercepts next stage button clicks and checks for unsaved modifications
+  - **Navigation Prevention**: Blocks stage progression when unsaved changes are detected
+  - **User-Friendly Confirmation**: Custom confirmation dialog with clear messaging about data loss prevention
+
+- **Visual Indicators & User Feedback**: Improved UI to clearly communicate form state to users
+  - **Unsaved Changes Badge**: Orange warning indicator showing "You have unsaved changes" message
+  - **Enhanced Save Button**: Dynamic styling with orange color and pulse animation when changes are detected
+  - **Focus Management**: Automatic focus and scroll to save button when navigation is blocked
+
+### 🛠️ Technical Implementation
+
+#### Form Change Detection Features:
+- **Change Tracking Functions**: Added `checkForUnsavedChanges` and `initializeOriginalFormData` functions (10-15 lines each)
+- **State Management**: New state variables for `originalFormData`, `hasUnsavedChanges`, and `unsavedChangesDialog`
+- **Field Change Handler**: Enhanced `handleFieldChange` to trigger change detection on every form modification
+- **Save State Reset**: Updated save functionality to reset change tracking after successful form submission
+
+#### Navigation & User Experience:
+- **Navigation Handler**: Added `handleNavigateToNextStep` function with unsaved changes validation (10-15 lines)
+- **Confirmation Dialog**: Custom dialog component with clear messaging and user guidance
+- **Visual Feedback**: Dynamic button styling and warning indicators for better user awareness
+- **Accessibility**: Proper focus management and screen reader support for form state changes
+
+### 🔧 Files Modified
+
+- `src/app/(main)/profile/application/[caseId]/page.tsx` - Complete mandatory form saving implementation
+- `package.json` - Version update to 0.8.5
+
+### 🧪 Quality Assurance
+
+- **Build Verification**: Successful compilation with `npm run build` - no TypeScript errors
+- **Development Server**: Verified functionality with `npm run dev` on localhost:3001
+- **Code Quality**: Functions maintained at 10-15 lines maximum for unit testability
+- **Memory Management**: Proper cleanup implemented to prevent memory leaks
+- **User Testing**: Tested with form modifications, navigation attempts, and save operations
+
+### 📋 User Experience Improvements
+
+- **Data Loss Prevention**: Users cannot navigate between stages without saving changes
+- **Clear Communication**: Visual indicators and confirmation dialogs explain save requirements
+- **Guided Actions**: Focus management directs users to save button when navigation is blocked
+- **Responsive Design**: Visual indicators work seamlessly across different screen sizes
+
 ## [0.8.4] - 2025-09-08
 
 ### 🚀 Document Vault & Application Records Updates

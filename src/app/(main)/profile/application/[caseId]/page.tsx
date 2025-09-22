@@ -115,6 +115,21 @@ const ApplicationPage: React.FC = () => {
   // Track recently uploaded files to delay button access (5 seconds)
   const [recentlyUploadedFiles, setRecentlyUploadedFiles] = useState<Set<string>>(new Set());
 
+  // Form change tracking state
+  const [originalFormData, setOriginalFormData] = useState<Record<string, any>>({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [unsavedChangesDialog, setUnsavedChangesDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
+
   const { mutate: submitDocument } = useSubmitApplicationDocument();
   const { mutate: deleteDocument } = useDeleteApplicationDocument();
   const [deletingDocuments, setDeletingDocuments] = useState<Record<string, boolean>>({});
@@ -159,6 +174,70 @@ const ApplicationPage: React.FC = () => {
 
   const handleFieldChange = (stepId: number, fieldId: string, value: any) => {
     setFormData((prev) => ({ ...prev, [`${stepId}-${fieldId}`]: value }));
+    checkForUnsavedChanges(stepId, fieldId, value);
+  };
+
+  // Check if current form has unsaved changes
+  const checkForUnsavedChanges = (stepId: number, fieldId: string, newValue: any) => {
+    const fieldKey = `${stepId}-${fieldId}`;
+    const originalValue = originalFormData[fieldKey];
+
+    // Compare new value with original value
+    const hasChanges = originalValue !== newValue;
+
+    if (hasChanges && !hasUnsavedChanges) {
+      setHasUnsavedChanges(true);
+    } else if (!hasChanges) {
+      // Check if any other fields have changes
+      const currentFormData = { ...formData, [fieldKey]: newValue };
+      const hasAnyChanges = Object.keys(currentFormData).some(key => {
+        return currentFormData[key] !== originalFormData[key];
+      });
+      setHasUnsavedChanges(hasAnyChanges);
+    }
+  };
+
+  // Initialize original form data when step data loads
+  const initializeOriginalFormData = (stepData: ApplicationStep) => {
+    const stepFormData: Record<string, any> = {};
+    stepData.customForm.forEach((field) => {
+      const fieldKey = `${stepData.stageOrder}-${field.id}`;
+      stepFormData[fieldKey] = field.fieldValue ?? "";
+    });
+    setOriginalFormData(prev => ({ ...prev, ...stepFormData }));
+  };
+
+  // Handle navigation with unsaved changes check
+  const handleNavigateToNextStep = (currentStepId: number) => {
+    if (hasUnsavedChanges) {
+      setUnsavedChangesDialog({
+        isOpen: true,
+        title: "Unsaved Changes Detected",
+        description: "You have unsaved changes in this form. Please save your changes before proceeding to the next stage to prevent data loss.",
+        onConfirm: () => {
+          setUnsavedChangesDialog(prev => ({ ...prev, isOpen: false }));
+          // Focus on save button to guide user
+          const saveButton = document.querySelector('[data-save-button]') as HTMLButtonElement;
+          if (saveButton) {
+            saveButton.focus();
+            saveButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        },
+      });
+      return;
+    }
+
+    // Proceed with navigation if no unsaved changes
+    proceedToNextStep(currentStepId);
+  };
+
+  // Proceed to next step without checks
+  const proceedToNextStep = (currentStepId: number) => {
+    const steps = applicationData?.steps || [];
+    const nextStepIndex = steps.findIndex((s) => s.stageOrder === currentStepId) + 1;
+    if (nextStepIndex < steps.length) {
+      setSelectedStep(steps[nextStepIndex].stageOrder);
+    }
   };
 
   // Helper function to toggle file list expansion
@@ -171,6 +250,11 @@ const ApplicationPage: React.FC = () => {
   useEffect(() => {
     if (data && data.current_step) {
       setSelectedStep(Number(data.current_step));
+
+      // Initialize original form data for all steps
+      data.steps.forEach((step: ApplicationStep) => {
+        initializeOriginalFormData(step);
+      });
     }
   }, [data]);
 
@@ -180,6 +264,15 @@ const ApplicationPage: React.FC = () => {
       if (saveMessageTimeoutRef.current) {
         clearTimeout(saveMessageTimeoutRef.current);
       }
+    };
+  }, []);
+
+  // Cleanup change tracking state when component unmounts
+  useEffect(() => {
+    return () => {
+      setHasUnsavedChanges(false);
+      setOriginalFormData({});
+      setFormData({});
     };
   }, []);
 
@@ -442,6 +535,19 @@ const ApplicationPage: React.FC = () => {
       onSuccess: () => {
         setSaveMessage("Form saved successfully!");
         setIsSaving(false);
+
+        // Reset change tracking after successful save
+        setHasUnsavedChanges(false);
+        const updatedOriginalData = { ...originalFormData };
+        const step = steps.find((s) => s.id === stepId);
+        if (step) {
+          step.customForm.forEach((field) => {
+            const fieldKey = `${stepId}-${field.id}`;
+            updatedOriginalData[fieldKey] = formData[fieldKey] ?? field.fieldValue ?? "";
+          });
+          setOriginalFormData(updatedOriginalData);
+        }
+
         // Clear any existing timeout
         if (saveMessageTimeoutRef.current) {
           clearTimeout(saveMessageTimeoutRef.current);
@@ -449,7 +555,7 @@ const ApplicationPage: React.FC = () => {
         // Clear message after 3 seconds
         saveMessageTimeoutRef.current = setTimeout(
           () => setSaveMessage(""),
-          3000
+          5000
         );
       },
       onError: (error: any) => {
@@ -465,7 +571,7 @@ const ApplicationPage: React.FC = () => {
         // Clear message after 3 seconds
         saveMessageTimeoutRef.current = setTimeout(
           () => setSaveMessage(""),
-          3000
+          5000
         );
       },
     });
@@ -1187,11 +1293,27 @@ const ApplicationPage: React.FC = () => {
                 {(() => {
                   const hasClientVisibleFields = step.customForm.some(field => field.showToClient);
                   return hasClientVisibleFields && (
-                    <div className="flex justify-end mb-6">
+                    <div className="flex justify-between items-center mb-6">
+                      {/* Unsaved Changes Indicator */}
+                      {hasUnsavedChanges && (
+                        <div className="flex items-center gap-2 text-orange-600 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200">
+                          <AlertTriangle size={16} />
+                          <span className="text-sm font-medium">You have unsaved changes</span>
+                        </div>
+                      )}
+                      {!hasUnsavedChanges && (
+                        <div></div>
+                      )}
+
                       <Button
+                        data-save-button
                         onClick={() => handleSaveForm(step.id)}
                         disabled={isSaving}
-                        className="bg-black hover:bg-gray-800 text-white px-4 py-2 transition-all duration-200 hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`px-4 py-2 transition-all duration-1000 hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
+                          hasUnsavedChanges
+                            ? "bg-orange-600 hover:bg-orange-700 text-white animate-pulse"
+                            : "bg-black hover:bg-gray-800 text-white"
+                        }`}
                       >
                         {isSaving ? (
                           <div className="flex items-center gap-2">
@@ -1539,16 +1661,7 @@ const ApplicationPage: React.FC = () => {
                   </Button>
                   <div className="flex gap-3">
                     <Button
-                      onClick={() => {
-                        // Navigate to next stage without submitting to backend
-                        const nextStepIndex = steps.findIndex((s) => s.id === step.id) + 1;
-                        if (nextStepIndex < steps.length) {
-                          setSelectedStep(steps[nextStepIndex].id);
-                        } else {
-                          // If this is the last step, stay on current step
-                          // Progress bar will show completion status
-                        }
-                      }}
+                      onClick={() => handleNavigateToNextStep(step.id)}
                       disabled={index === steps.length - 1}
                       className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2 transition-all duration-200 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -1571,6 +1684,19 @@ const ApplicationPage: React.FC = () => {
         confirmText="Delete"
         cancelText="Cancel"
         variant="destructive"
+        isLoading={false}
+      />
+
+      {/* Unsaved Changes Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={unsavedChangesDialog.isOpen}
+        onClose={() => setUnsavedChangesDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={unsavedChangesDialog.onConfirm}
+        title={unsavedChangesDialog.title}
+        description={unsavedChangesDialog.description}
+        confirmText="I Understand"
+        cancelText="Cancel"
+        variant="default"
         isLoading={false}
       />
     </div>
